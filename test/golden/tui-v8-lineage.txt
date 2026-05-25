@@ -1,0 +1,40 @@
+  rufio · substrate  ⠋ syncing                                 ● substrate ·   fleet ·   channels ·   goals ·   memory  
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                         ╭────────────────────────────────────────────────────────────────────╮                         
+                         │                                                                    │                         
+                         │   Decision: offer downgrade, not churn-save discount               │                         
+                         │   by claude-code · 14:02:46                                        │                         
+                         │   Subject: customer:5821  #1747-d29                                │                         
+                         │                                                                    │                         
+                         │   Context bundle:                                                  │                         
+                         │     • given/refund-policy.md@v1 (sha a3f8…)                        │                         
+                         │     • learned/customer:5821                                        │                         
+                         │                                                                    │                         
+                         │   Reasoning chain:                                                 │                         
+                         │     1. customer requested downgrade, not cancellation              │                         
+                         │     2. usage contraction confirmed by data-analyst (12→3/30d)      │                         
+                         │     3. policy: downgrade offers < $500 auto-approve                │                         
+                         │     4. decision: approve downgrade offer, no churn-save discount   │                         
+                         │                                                                    │                         
+                         │   press esc to close                                               │                         
+                         │                                                                    │                         
+                         ╰────────────────────────────────────────────────────────────────────╯                         
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+  1 · substrate 2 · fleet 3 · channels 4 · goals 5 · memory : · cmd ? · help esc · nav i · compose                      

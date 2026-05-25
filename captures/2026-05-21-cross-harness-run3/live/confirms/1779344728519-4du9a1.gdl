@@ -1,0 +1,1 @@
+@refute|target:1779344728519-4du9a1|by:agent-cursor|reason:Harness binary 0.1.0 accepts --topics\: rufio recall --help lists it; rufio recall --topics=v1-2-roadmap exits 0 with matches. Likely codex shell used stale rufio on PATH.|ts:2026-05-21T06\:26\:25.933567Z

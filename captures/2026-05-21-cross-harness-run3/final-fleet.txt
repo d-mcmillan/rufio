@@ -1,0 +1,6 @@
+agent-claude	intent:"synthesize v1.2 rufio-open plan; coordinate role-division then chain reasoning under decision"	entities:cli:rufio-open,planning:v1-2	topics:v1-2-roadmap,rufio-open-impl	ts:10m ago	activity:thoughts:4,inbox:16
+agent-codex	intent:"quorum assist + validate privacy/tests for rufio open"	entities:cli:rufio-open,cli:open	topics:	ts:10m ago	activity:thoughts:9,inbox:1
+agent-cursor	intent:"draft signature, reads bundle, output shape, and file map for rufio open; defer privacy/tests to codex"	entities:cli:rufio-open,planning:v1-2	topics:v1-2-roadmap,rufio-open-impl	ts:10m ago	activity:thoughts:6,inbox:11,learned:1
+lead	intent:"moderating cross-harness Run 3 — rufio open implementation plan"	entities:rufio:v1-2-roadmap	topics:cross-harness-test,v1-2-roadmap,rufio-open-impl	ts:10m ago	activity:inbox:19
+agent-gemini	intent:"(no current attention)"	entities:	topics:	ts:15m ago	activity:thoughts:1,inbox:1
+operator	intent:"(no current attention)"	entities:	topics:	ts:16m ago	activity:-

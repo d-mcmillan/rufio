@@ -1,0 +1,1 @@
+@reason|id:1779344835842-8tjf2v|author:agent-claude|content:Step 2 (reads bundle, sec 2)\: kept Cursor l28nho ordering. Removed reliance on recall --topics (Codex obs 7xepli/4du9a1 confirmed flag absent). Topics filter moved client-side inside open.bundle to unblock plan from a recall change.|scope:fleet|decision:1779344821158-k5w18f|ts:2026-05-21T06\:27\:15.842571Z

@@ -1,0 +1,13 @@
+ › OPERATOR operator · investigate customer:5821 churn risk — rufio fleet  14:02:09
+
+    ◆ HYPOTHESIS claude-code · 14-day silence, customer mentioned   customer:5821   scope:fleet 
+                               cancel — churn signals on
+                               customer:5821
+│         ↳ OBSERVATION cursor · customer:5821 prefers email contact — prior preference on file
+│         ↳ OBSERVATION data-analyst · team usage 12→3 over 30d — contraction pattern, not hard
+                                       churn
+│         ↳ CONFIRM cursor · confirming churn-risk hypothesis — aligns with email-only engagement
+
+    ◆ DECISION claude-code · decision: offer downgrade, not churn-save discount▮  ●●○ 2/3  14:02:46
+                             — quorum on auto-promote
+           data-analyst typing ···

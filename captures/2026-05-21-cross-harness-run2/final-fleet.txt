@@ -1,0 +1,5 @@
+agent-gemini	intent:"(no current attention)"	entities:	topics:	ts:5m ago	activity:thoughts:1
+agent-claude	intent:"synthesizing v1.3 priority — pulling threads, weighing tradeoffs"	entities:rufio:v1-3-roadmap	topics:v1-3-roadmap	ts:5m ago	activity:thoughts:2,inbox:3,learned:1
+agent-codex	intent:"v1.3 anchor: pick single highest-priority feature; I’ll stress-test proposals for reliability, DX, and load-bearing API invariants"	entities:rufio:v1-3-roadmap	topics:	ts:5m ago	activity:thoughts:2,inbox:1
+agent-cursor	intent:"v1.3 anchor: engineering-pragmatic review — ship cost, DX on real harnesses, compounding with v1.2 open+auto-promote"	entities:rufio:v1-3-roadmap	topics:v1-3-roadmap	ts:5m ago	activity:thoughts:1,learned:2
+lead	intent:"moderating cross-harness Run 2 — v1.3 priority decision"	entities:rufio:substrate	topics:cross-harness-test,v1-3-roadmap	ts:5m ago	activity:inbox:3

@@ -1,0 +1,40 @@
+  rufio · substrate  ⠋ syncing                                 ● substrate ·   fleet ·   channels ·   goals ·   memory  
+  ╭──────────────────────────────────────────────────────────────────────╮  ╭────────────────────────────────────────╮  
+  │  ◆ #substrate 3 minds · operator linked     ▁▂▃▄▅▆▇█▆▅ 3/s · ◜ live  │  │  ◆ MESH  4 nodes · 5 links     ⠁ live  │  
+  │  ──────────────────────────────────────────────────────────────────  │  │                                        │  
+  │                                                                      │  │                                        │  
+  │   › FOCUS operator · investigate customer:5821 churn risk  14:02:09  │  │                                        │  
+  │                                                                      │  │                                        │  
+  │      ◆ HYPOTHESIS claude-code · 14-day silence, customer mentioned   │  │                                        │  
+  │                                 cancel — churn signals               │  │                                        │  
+  │  │         ↳ OBSERVATION cursor · customer:5821 prefers email        │  │                                        │  
+  │                                   contact                            │  │                                        │  
+  │                                                                      │  │                                        │  
+  │  ▸   ◆ DECISION claude-code · decision: offer▮  ●●○ 2/3  14:02:46    │  │                                        │  
+  │                               downgrade, not                         │  │                                        │  
+  │                               churn-save                             │  │                   ─●─                  │  
+  │                               discount                               │  │               claude-code              │  
+  │                                                                      │  │               ─operator──              │  
+  │                                                                      │  │             ──   ──◉──   ──            │  
+  │                                                                      │  │           ── ────     ──── ──          │  
+  │                                                                      │  │    cursor────            data-analyst  │  
+  │                                                                      │  │       ●──                     ──●      │  
+  │                                                                      │  │                                        │  
+  │                                                                      │  │                                        │  
+  │                                                                      │  │                                        │  
+  │                                                                      │  │                                        │  
+  │                                                                      │  │                                        │  
+  │                                                                      │  │                                        │  
+  │                                                                      │  │                                        │  
+  │                                                                      │  │                                        │  
+  │                                                                      │  │                                        │  
+  │                                                                      │  │                                        │  
+  │                                                                      │  │                                        │  
+  │  ──────────────────────────────────────────────────────────────────  │  │  ────────────────────────────────────  │  
+  │                                                                      │  │  ROUTING  4 linked · quorum 2/3        │  
+  │  › @fleet type to broadcast · @agent to direct · /cmd for actions▮   │  │                                        │  
+  │                                                                      │  │                                        │  
+  │          ⏎ send · ⇧⏎ newline · / command · @ target · compose        │  │                                        │  
+  │                                                                      │  │                                        │  
+  ╰──────────────────────────────────────────────────────────────────────╯  ╰────────────────────────────────────────╯  
+  1 · substrate 2 · fleet 3 · channels 4 · goals 5 · memory : · cmd ? · help esc · nav i · compose                      

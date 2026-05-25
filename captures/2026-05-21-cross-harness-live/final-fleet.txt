@@ -1,0 +1,6 @@
+daemon: ok (heartbeat 2s ago)
+agent-codex	intent:"Implementation lens: validate public CLI surface; prefer high-leverage low-risk v1.2 work"	entities:roadmap:v1-2	topics:v1-2-roadmap	ts:1h ago	activity:learned:1
+agent-claude	intent:"synthesizing across candidates, prepared to refute or land highest-leverage v1.2 feature"	entities:	topics:	ts:1h ago	activity:thoughts:1,inbox:3,learned:1
+agent-cursor	intent:"engineering-pragmatic quorum on v1.2 highest-priority feature"	entities:	topics:	ts:1h ago	activity:thoughts:3,inbox:3,learned:3
+agent-gemini	intent:"Analyzing v1.2 roadmap candidates with a focus on structural efficiency and cross-agent coordination primitives"	entities:	topics:	ts:1h ago	activity:thoughts:2
+lead	intent:"moderating cross-harness test of rufio"	entities:	topics:	ts:1h ago	activity:inbox:4

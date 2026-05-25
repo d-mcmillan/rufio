@@ -1,0 +1,153 @@
+name: CI
+
+# Cross-platform Go CI for the post-migration substrate. Closes the
+# biggest test-coverage gap from the branch-level review: only macOS
+# arm64 was verified locally. The TS-era banner-renders job is replaced
+# (banner is exercised via the smoke test below; legacy/typescript-week-1/
+# is reference-only and not built in CI).
+#
+# Security: this workflow runs only on trusted code paths (push to our
+# own branches; pull_request to main). It does NOT inject any github.event
+# fields into run: commands.
+
+on:
+  push:
+    branches: [main, "feat/**", "fix/**", "chore/**"]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: test (${{ matrix.os }} / go ${{ matrix.go-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # macos-latest runners cost ~10x ubuntu-latest, so run the
+        # macOS leg ONLY on push to main (post-merge); every PR and
+        # feat/**/fix/**/chore/** push validates on ubuntu only.
+        os: ${{ fromJSON((github.event_name == 'push' && github.ref == 'refs/heads/main') && '["ubuntu-latest","macos-latest"]' || '["ubuntu-latest"]') }}
+        # go-version must track go.mod's `go` directive, now 1.25.0 —
+        # raised because the official github.com/modelcontextprotocol/
+        # go-sdk dependency requires go 1.25. A mismatched (lower)
+        # runner would fetch the directive version as an auto-toolchain
+        # on every run, which raced the actions/setup-go cache extract
+        # on Ubuntu ("File exists" tar errors). Closes WK6-CI-1.
+        go-version: ["1.25.x"]
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version: ${{ matrix.go-version }}
+          cache: true
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: gofmt
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then
+            echo "::error::gofmt found unformatted files:"
+            echo "$unformatted"
+            exit 1
+          fi
+
+      - name: go test (with race detector)
+        run: go test -race ./...
+
+      - name: go build
+        run: go build -o /tmp/rufio ./cmd/rufio
+
+      - name: smoke test (init + push + pull)
+        run: |
+          set -euo pipefail
+          DEMO=$(mktemp -d)
+          cd "$DEMO"
+          /tmp/rufio init demo
+          mkdir -p given
+          echo "policy v1" > given/x.md
+          /tmp/rufio push given/x.md --stage=live
+          got=$(/tmp/rufio pull given/x.md)
+          if [ "$got" != "policy v1" ]; then
+            echo "::error::pull mismatch: got $got"
+            exit 1
+          fi
+          echo "smoke ok"
+
+  # Python SDK job — only the Go-side tests build the Go binary on
+  # macOS; the SDK is OS-agnostic (subprocess + HTTPS only) so ubuntu
+  # is sufficient for matrix coverage. CI builds the rufio binary
+  # first then exposes it to pytest via RUFIO_BINARY. No untrusted
+  # inputs are interpolated into run: — only matrix values controlled
+  # by this workflow file itself.
+  python-sdk:
+    name: python sdk
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.25.x"
+          cache: true
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: build rufio binary
+        run: go build -o /tmp/rufio ./cmd/rufio
+
+      - name: install SDK in editable mode + dev deps
+        working-directory: python
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: ruff lint
+        working-directory: python
+        run: ruff check rufio/ tests/
+
+      - name: pytest
+        working-directory: python
+        env:
+          RUFIO_BINARY: /tmp/rufio
+        run: pytest -ra
+
+      - name: build wheel (verify hatchling produces a valid artefact)
+        working-directory: python
+        run: |
+          pip install build
+          python -m build --wheel
+          ls -la dist/
+
+      # The launch-blocker regression guard: build a wheel, install
+      # it into a CLEAN venv, and import from a DIFFERENT cwd. v1.0.5
+      # initially shipped with an empty wheel because hatchling's
+      # file-set discovery failed silently — pytest passed because it
+      # ran from python/ where cwd-on-sys-path masked the bug.
+      # Running the import from /tmp bypasses that mask.
+      - name: validate wheel install (external cwd import)
+        working-directory: python
+        run: |
+          set -euo pipefail
+          python -m venv /tmp/wheel-venv
+          /tmp/wheel-venv/bin/pip install --quiet --upgrade pip
+          /tmp/wheel-venv/bin/pip install --quiet dist/rufio-*.whl
+          cd /tmp  # critical: outside python/ source tree
+          /tmp/wheel-venv/bin/python -c "
+          import rufio
+          assert rufio.__version__ == '1.0.6', f'wrong version: {rufio.__version__}'
+          assert 'site-packages' in rufio.__file__, f'not installed: {rufio.__file__}'
+          from rufio import Rufio, RufioError, NoSuchThought, Unauthorized
+          print(f'wheel install OK: {rufio.__file__}')
+          "

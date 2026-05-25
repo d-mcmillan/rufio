@@ -1,0 +1,131 @@
+=== Rufio v1.0.4 — Live Cross-Machine Smoke ===
+
+# Setup
+$ /tmp/rufio-v104 init
+  initialised rufio project at /tmp/rufio-v104-server
+  config: /tmp/rufio-v104-server/rufio.gdl
+
+# Mint tokens
+$ /tmp/rufio-v104 admin token mint --agent=alice
+  token_id=tok-<…>
+  token=rufio_<…>
+$ /tmp/rufio-v104 admin token mint --agent=bob
+  token_id=tok-<…>
+  token=rufio_<…>
+
+# Start server
+$ /tmp/rufio-v104 serve --port=18443 --tls-cert=… --tls-key=…
+  rufio serve: starting https://0.0.0.0:18443 (root=/tmp/rufio-v104-server)
+  rufio serve: listening on https://0.0.0.0:18443
+
+# Health probe (no auth)
+$ curl -sk https://localhost:18443/health
+  {"status":"ok"}
+
+# Alice attends via remote
+$ rufio --server=https://localhost:18443 --token=$TOKEN_ALICE --insecure-tls \
+       attend --intent="testing v1.0.4" --entities=test:1 --scope=fleet
+  {
+    "_type": "attend-set", "_version": "1", "agent": "alice",
+    "entities": ["test:1"], "intent": "testing v1.0.4",
+    "scope": "fleet", "topics": [], "ts": "2026-05-22T01:20:35.884452Z"
+  }
+
+# Alice thinks via remote
+$ rufio --server=https://localhost:18443 --token=$TOKEN_ALICE --insecure-tls \
+       think --type=hypothesis --subject=test:1 --content="alpha hypothesis from alice" \
+       --scope=fleet --topics=alpha
+  {
+    "_type": "think", "_version": "1", "author": "alice",
+    "content": "alpha hypothesis from alice",
+    "id": "1779412841015-leh6w1", ...
+  }
+
+# Bob's remote recall sees alice's work
+$ rufio --server=https://localhost:18443 --token=$TOKEN_BOB --insecure-tls recall --topics=alpha
+  {
+    "records": [
+      { "_type": "thought", "author": "alice", "content": "alpha hypothesis from alice",
+        "scope": "fleet", "subject": "test:1", "type": "hypothesis", ... }
+    ]
+  }
+
+# Bob confirms alice's hypothesis via remote
+$ rufio --server=https://localhost:18443 --token=$TOKEN_BOB --insecure-tls \
+       confirm 1779412841015-leh6w1 --evidence="bob confirms"
+  {
+    "_type": "confirm", "_version": "1", "by": "bob",
+    "evidence": "bob confirms", "target": "1779412841015-leh6w1", ...
+  }
+
+# Mirror snapshot pull as alice
+$ rufio mirror pull --from=https://localhost:18443 --token=$TOKEN_ALICE \
+       --to=/tmp/rufio-v104-mirror --insecure-tls
+  mirror pull: wrote=1 unchanged=0 skipped=1 to=/tmp/rufio-v104-mirror
+
+$ cat /tmp/rufio-v104-mirror/live/outbox/alice/1779412841015-leh6w1.gdl
+  @thought|id:1779412841015-leh6w1|author:alice|type:hypothesis|subject:test\:1|
+   content:alpha hypothesis from alice|scope:fleet|
+   ts:2026-05-22T01\:20\:41.015499Z
+
+# Bob writes a scope=agent record (private)
+$ rufio --server=https://localhost:18443 --token=$TOKEN_BOB --insecure-tls \
+       think --type=hypothesis --subject=test:1 --content="bob's PRIVATE secret" \
+       --scope=agent --topics=alpha
+
+# Alice mirror pull again: PRIVATE secret MUST NOT appear
+$ rufio mirror pull --from=https://localhost:18443 --token=$TOKEN_ALICE \
+       --to=/tmp/rufio-v104-mirror --insecure-tls
+  mirror pull: wrote=0 unchanged=1 skipped=1
+
+$ grep -r "PRIVATE secret" /tmp/rufio-v104-mirror
+  (no match)
+  PASS: bob's scope=agent record never reached alice's mirror
+
+# Alice's remote recall ALSO does not see bob's private record
+$ rufio --server=https://localhost:18443 --token=$TOKEN_ALICE --insecure-tls \
+       recall --topics=alpha | grep -c "PRIVATE secret"
+  0
+
+# Mirror sync (continuous SSE) as alice
+$ rufio mirror sync --from=https://localhost:18443 --token=$TOKEN_ALICE \
+       --to=/tmp/rufio-v104-sync --insecure-tls &
+  mirror sync: https://localhost:18443 -> /tmp/rufio-v104-sync
+  mirror sync: connected to https://localhost:18443/listen (cursor="")
+
+# Alice writes a NEW thought; sync picks it up via SSE within seconds
+$ rufio --server=https://localhost:18443 --token=$TOKEN_ALICE --insecure-tls \
+       think --type=hypothesis --subject=test:2 --content="LIVE EVENT for sync" \
+       --scope=fleet --topics=alpha
+  "id": "1779412909370-v0yipn"
+
+$ ls /tmp/rufio-v104-sync/live/outbox/alice/
+  1779412841015-leh6w1.gdl
+  1779412909370-v0yipn.gdl        <-- new event arrived via SSE
+
+# Sync ALSO honors privacy floor — bob's private not present
+$ grep -r "PRIVATE secret" /tmp/rufio-v104-sync
+  (no match)
+  PASS: alice sync excludes bob's scope=agent record
+
+# JSONL export
+$ rufio export --format=jsonl > /tmp/rufio-v104-export.jsonl
+$ wc -l /tmp/rufio-v104-export.jsonl
+  3 records
+
+# JSONL roundtrip — import into fresh substrate
+$ rufio init && cat /tmp/rufio-v104-export.jsonl | rufio import --format=jsonl
+  import: wrote 3 records
+
+$ rufio recall
+  now thought:hypothesis bob   …  agent  "bob's PRIVATE secret"
+  now thought:hypothesis alice …  fleet  "alpha hypothesis from alice"
+
+=== ALL GREEN ===
+- Identity is server-authoritative (alice token → alice; bob token → bob)
+- TLS HTTPS transport on :18443 with self-signed cert
+- Bearer-token auth enforced on /mcp and /listen
+- /health bypasses auth
+- Server-side privacy floor holds across recall, mirror pull, mirror sync
+- Mirror snapshot + continuous sync both produce file-native local shadow
+- JSONL export/import roundtrip preserves visible records

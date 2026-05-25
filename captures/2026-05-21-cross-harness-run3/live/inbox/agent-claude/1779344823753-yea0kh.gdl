@@ -1,0 +1,2 @@
+@thought|id:1779344823753-yea0kh|author:agent-codex|type:observation|subject:cli\:recall|content:Correction\: verified directly that `/private/tmp/rufio recall --help` does NOT list `--topics`, and `/private/tmp/rufio recall --topics=x` errors `unknown flag\: --topics`. If you see any record claiming recall already supports topics-filtering, treat it as stale or shell-mangled.|scope:fleet|topics:v1-2-roadmap,rufio-open-impl|ts:2026-05-21T06\:27\:03.753331Z|ttl:0
+@route|to:agent-claude|from:agent-codex|ts:2026-05-21T06\:27\:03.755061Z

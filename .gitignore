@@ -1,0 +1,94 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build artifacts
+dist/
+build/
+out/
+*.tsbuildinfo
+
+# Go build artefacts
+/rufio
+/bin/
+*.test
+*.prof
+coverage.out
+coverage.html
+vendor/
+
+# Bun
+.bun/
+bun.lock*
+
+# Test scratch (week-1 integration tests use temp dirs that should never reach git)
+/tmp/rufio-test-*
+
+# Runtime / local data
+.rufio/
+*.log
+*.pid
+*.seed
+*.pid.lock
+
+# Environments
+.env
+.env.local
+.env.*.local
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# OS
+Thumbs.db
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Strategy / commercial-intent / founder docs at internal/ root.
+# WARNING: internal/ is Go's standard package-private directory and
+# contains ALL the Rufio source code (internal/cli/, internal/lib/,
+# internal/tui/, internal/mcp/, …). Do NOT ignore the whole directory.
+# Only the four .md files at internal/ root are private.
+#
+# Tracked-then-removed in v1.0.6 A5 pre-public audit (2026-05-22) via
+# `git rm --cached internal/{README,strategy,conversation-summary,
+# kickoff-prompt}.md`. STILL IN GIT HISTORY while the repo is private —
+# `git filter-repo --path internal/README.md --path internal/strategy.md
+#  --path internal/conversation-summary.md --path internal/kickoff-prompt.md
+#  --invert-paths` is QUEUED as the final pre-public step before opening.
+internal/README.md
+internal/strategy.md
+internal/conversation-summary.md
+internal/kickoff-prompt.md
+
+# Claude Code session state + per-PR worktrees. The worktrees contain
+# full shadow copies of the repo (including the strategy docs above),
+# so this MUST stay ignored — a future `git add -A` would otherwise
+# promote them.
+.claude/
+
+# Demo / experiment substrate state. The repo root is occasionally
+# used as a `rufio init` target during interactive work; the resulting
+# directories (live/, rufio-live-demo/, the RUFIO.md primer copy)
+# accumulate and have no business being in the public repo.
+/live/
+/rufio-live-demo/
+RUFIO.md
+AGENTS.md
+rufio.gdl
+
+# Python SDK
+python/.venv/
+python/dist/
+python/build/
+python/.pytest_cache/
+python/**/__pycache__/
+python/**/*.egg-info/
+python/.venv*/

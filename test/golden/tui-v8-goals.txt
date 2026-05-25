@@ -1,0 +1,40 @@
+  rufio · substrate  ⠋ syncing                                   substrate ·   fleet ·   channels · ● goals ·   memory  
+  ╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮  
+  │                                                                                                                  │  
+  │  ◆ goals  2 active · customer:5821                                                                               │  
+  │                                                                                                                  │  
+  │  [active] resolve customer:5821 churn risk · claude-code 14:02:50                                                │  
+  │      ⤷ overlaps cursor — shared entity customer:5821                                                             │  
+  │                                                                                                                  │  
+  │  [active] improve customer:5821 onboarding re-engagement · cursor 14:02:55                                       │  
+  │      ⤷ overlaps claude-code — shared entity customer:5821                                                        │  
+  │                                                                                                                  │  
+  │                                                                                                                  │  
+  │                                                                                                                  │  
+  │                                                                                                                  │  
+  │                                                                                                                  │  
+  │                                                                                                                  │  
+  │                                                                                                                  │  
+  │                                                                                                                  │  
+  │                                                                                                                  │  
+  │                                                                                                                  │  
+  │                                                                                                                  │  
+  │                                                                                                                  │  
+  │                                                                                                                  │  
+  │                                                                                                                  │  
+  │                                                                                                                  │  
+  │                                                                                                                  │  
+  │                                                                                                                  │  
+  │                                                                                                                  │  
+  │                                                                                                                  │  
+  │                                                                                                                  │  
+  │                                                                                                                  │  
+  │                                                                                                                  │  
+  │                                                                                                                  │  
+  │                                                                                                                  │  
+  │                                                                                                                  │  
+  │                                                                                                                  │  
+  │                                                                                                                  │  
+  │                                                                                                                  │  
+  ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯  
+  1 · substrate 2 · fleet 3 · channels 4 · goals 5 · memory : · cmd ? · help esc · nav i · compose                      

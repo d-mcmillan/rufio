@@ -1,0 +1,40 @@
+  rufio · substrate  ⠋ syncing                                 ● substrate ·   fleet ·   channels ·   goals ·   memory  
+  ╭──────────────────────────────────────────────────────────────────────╮  ╭────────────────────────────────────────╮  
+  │  ◆ #substrate 4 minds · operator linked  · daemon offline ·          │  │  ◆ MESH  4 nodes · 5 links     ⠁ live  │  
+  │  ──────────────────────────────────────────────────────────────────  │  │                                        │  
+  │                                                                      │  │                                        │  
+  │   › OPERATOR operator · investigate customer:5821 churn  14:02:09    │  │                                        │  
+  │                         risk — rufio fleet                           │  │                                        │  
+  │                                                                      │  │                                        │  
+  │      ◆ HYPOTHESIS claude-code · 14-d   customer:5821   scope:fleet   │  │                                        │  
+  │                                 ay                                   │  │                                        │  
+  │                                 sile                                 │  │                                        │  
+  │                                 nce,                                 │  │                                        │  
+  │                                 cust                                 │  │                                        │  
+  │                                 ome…                                 │  │                                        │  
+  │  │         ↳ OBSERVATION cursor · customer:5821 prefers email        │  │                   ─●─                  │  
+  │                                   contact — prior preference on      │  │               claude-code              │  
+  │                                   file                               │  │               ─operator──              │  
+  │  │         ↳ OBSERVATION data-analyst · team usage 12→3 over 30d —   │  │             ──   ──◉──   ──            │  
+  │                                         contraction pattern, not     │  │           ── ────     ──── ──          │  
+  │                                         hard churn                   │  │    cursor────            data-analyst  │  
+  │  │         ↳ CONFIRM cursor · confirming churn-risk hypothesis —     │  │       ●──                     ──●      │  
+  │                               aligns with email-only engagement      │  │                                        │  
+  │                                                                      │  │                                        │  
+  │  ▸   ◆ DECISION claude-code · decision: offer▮  ●●○ 2/3  14:02:46    │  │                                        │  
+  │                               downgrade, not                         │  │                                        │  
+  │                               churn-save                             │  │                                        │  
+  │                               discount — quorum                      │  │                                        │  
+  │                               on auto-promote                        │  │                                        │  
+  │                                                                      │  │                                        │  
+  │                                                                      │  │                                        │  
+  │                                                                      │  │                                        │  
+  │                                                                      │  │                                        │  
+  │  ──────────────────────────────────────────────────────────────────  │  │  ────────────────────────────────────  │  
+  │                                                                      │  │  ROUTING  4 linked · quorum 2/3        │  
+  │  › @fleet type to broadcast · @agent to direct · /cmd for actions▮   │  │                                        │  
+  │                                                                      │  │                                        │  
+  │          ⏎ send · ⇧⏎ newline · / command · @ target · nav · press …  │  │                                        │  
+  │                                                                      │  │                                        │  
+  ╰──────────────────────────────────────────────────────────────────────╯  ╰────────────────────────────────────────╯  
+  1 · substrate 2 · fleet 3 · channels 4 · goals 5 · memory : · cmd ? · help esc · nav i · compose                      
