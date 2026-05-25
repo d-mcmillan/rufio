@@ -148,6 +148,110 @@ func TestState_DaemonOfflineWithHistory(t *testing.T) {
 	}
 }
 
+// TestBundleF_OfflineSuppressesLyingIndicators is the v1.0.6.3 regression
+// guard. When the daemon is offline the TUI MUST NOT render the four
+// "live"-implying indicators (F1-F4) — they contradict the truthful
+// `· daemon offline ·` whisper. Asserts the negative-space contract:
+// none of the lying surface markers (the header `syncing` label, the
+// substrate chrome ` live` badge, the substrate `N/s` rate, the
+// pre-PR-F sparkline frame, the mesh-panel ` live` badge) appear in
+// the rendered output when daemonOnline is false.
+//
+// Companion: TestBundleF_OnlineRestoresIndicators asserts the SAME
+// markers ARE present when the daemon is online — proving the gating
+// flips both ways (no silent permanent removal).
+func TestBundleF_OfflineSuppressesLyingIndicators(t *testing.T) {
+	app := inject(t, 120, 40, pinnedThread(), false)
+	out := app.View()
+
+	// F1 — top-left `syncing` label.
+	if strings.Contains(out, "syncing") {
+		t.Errorf("F1: daemon-offline must NOT render `syncing` indicator in top header:\n%s", out)
+	}
+	// F2/F3 — `live` badges in the substrate chrome (` ◜ live`) AND the
+	// mesh-panel header (` ⠁ live`). With daemon offline both right-side
+	// segments collapse, so the badge text MUST NOT appear in any panel
+	// header. Each badge is followed by trailing spaces and a panel
+	// border `│`, so `live ` followed (eventually) by `│` is the
+	// badge-specific anchor — distinct from the F5 hint string
+	// `for live updates` (no border on the hint row).
+	for _, line := range strings.Split(out, "\n") {
+		if strings.Contains(line, " live") && strings.Contains(line, "│") {
+			t.Errorf("F2/F3: daemon-offline must NOT render the `live` badge in a panel header — found in line:\n%s\n\nFull output:\n%s", line, out)
+			break
+		}
+	}
+	// F4 — substrate `N/s` rate. The series rate frame-0 is "3/s"; any
+	// `\d+/s` token is a bug here.
+	for _, rate := range []string{"0/s", "1/s", "2/s", "3/s", "4/s", "5/s", "6/s", "7/s", "8/s"} {
+		if strings.Contains(out, rate) {
+			t.Errorf("F4: daemon-offline must NOT render fictional rate %q:\n%s", rate, out)
+		}
+	}
+	// F4 — pre-PR-F sparkline frame ▁▂▃▄▅▆▇█▆▅ MUST be suppressed.
+	if strings.Contains(out, sparklineFrame0) {
+		t.Errorf("F4: daemon-offline must NOT render the sparkline frame %q:\n%s",
+			sparklineFrame0, out)
+	}
+	// F5 — the new bottom hint MUST be present so the offline state is
+	// taught, not just hidden.
+	if !strings.Contains(out, "daemon offline — run `rufio dev` for live updates") {
+		t.Errorf("F5: daemon-offline must render the bottom teaching hint in:\n%s", out)
+	}
+}
+
+// TestBundleF_OnlineRestoresIndicators is the positive-space companion
+// to TestBundleF_OfflineSuppressesLyingIndicators. When the daemon IS
+// online the F1 syncing label, F2/F3 `live` badges, AND the F4
+// sparkline + `N/s` rate MUST render, and the F5 teaching hint MUST
+// be absent — proves the gating flips both ways.
+//
+// v1.0.6.3 (Bundle F): the F4 sparkline + `N/s` rate are now wired to
+// real substrate event rate (events_per_sec sampled at 2 Hz from
+// ThoughtMsg / ConfirmMsg / AttentionMsg arrivals). At zero injected
+// events the seeded series renders its initial frame-0 window (the
+// initial `▁▂▃▄▅▆▇█▆▅` + rate `3`) — that proves both indicators are
+// drawn; the actual values shift to observed rates once events flow.
+func TestBundleF_OnlineRestoresIndicators(t *testing.T) {
+	app := inject(t, 120, 40, pinnedThread(), true)
+	out := app.View()
+
+	// F1 — `syncing` label IS present.
+	if !strings.Contains(out, "syncing") {
+		t.Errorf("F1: daemon-online MUST render the `syncing` indicator in:\n%s", out)
+	}
+	// F2/F3 — the ` live` badge is present in panel headers. We look
+	// for ` live` co-located with a panel border `│` on the SAME line
+	// (the badge sits at the right edge of the chat-chrome / mesh-
+	// header strip, just inside the border). Animation-frame-agnostic.
+	foundLiveBadge := false
+	for _, line := range strings.Split(out, "\n") {
+		if strings.Contains(line, " live") && strings.Contains(line, "│") {
+			foundLiveBadge = true
+			break
+		}
+	}
+	if !foundLiveBadge {
+		t.Errorf("F2/F3: daemon-online MUST render the `live` badge in a panel header:\n%s", out)
+	}
+	// F4 — sparkline glyphs + `N/s` rate render the seeded frame-0 ring
+	// at startup (before any events have flowed). The seeded window is
+	// `▁▂▃▄▅▆▇█▆▅` and the seeded rate sample is `3`.
+	if !strings.Contains(out, sparklineFrame0) {
+		t.Errorf("F4: daemon-online MUST render the sparkline frame %q in:\n%s",
+			sparklineFrame0, out)
+	}
+	if !strings.Contains(out, "3/s") {
+		t.Errorf("F4: daemon-online MUST render the seeded frame-0 rate `3/s` in:\n%s", out)
+	}
+	// F5 — the bottom teaching hint MUST be ABSENT when the daemon is up
+	// (it is a teaching moment for the offline-only case; never a
+	// permanent footer affordance).
+	if strings.Contains(out, "daemon offline — run `rufio dev` for live updates") {
+		t.Errorf("F5: daemon-online must NOT render the offline teaching hint:\n%s", out)
+	}
+}
+
 // TestState_FreshEmpty is cold-start state (c): NO thoughts at all → the
 // normal v8 frame (panels/borders/chrome/composer intact) with a single
 // quiet centered setup hint — NOT a blank void, NOT a crash, NOT a modal.

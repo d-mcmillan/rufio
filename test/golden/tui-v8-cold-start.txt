@@ -1,6 +1,6 @@
-  rufio · substrate  ⠋ syncing                                 ● substrate ·   fleet ·   channels ·   goals ·   memory  
+  rufio · substrate  · offline                                 ● substrate ·   fleet ·   channels ·   goals ·   memory  
   ╭──────────────────────────────────────────────────────────────────────╮  ╭────────────────────────────────────────╮  
-  │  ◆ #substrate 0 minds · operator linked  · daemon offline ·          │  │  ◆ MESH  1 nodes · 0 links     ⠁ live  │  
+  │  ◆ #substrate 0 minds · operator linked  · daemon offline ·          │  │  ◆ MESH  1 nodes · 0 links             │  
   │  ──────────────────────────────────────────────────────────────────  │  │                                        │  
   │                                                                      │  │                                        │  
   │                                                                      │  │                                        │  
@@ -29,12 +29,12 @@
   │                                                                      │  │                                        │  
   │                                                                      │  │                                        │  
   │                                                                      │  │                                        │  
-  │                                                                      │  │                                        │  
   │  ──────────────────────────────────────────────────────────────────  │  │  ────────────────────────────────────  │  
   │                                                                      │  │  ROUTING  1 linked · quorum —          │  
   │  › @fleet type to broadcast · @agent to direct · /cmd for actions▮   │  │                                        │  
   │                                                                      │  │                                        │  
-  │          ⏎ send · ⇧⏎ newline · / command · @ target · nav · press …  │  │                                        │  
+  │          ⏎ send · ⇧⏎/⌃J newline · / command · @ target · nav · pre…  │  │                                        │  
   │                                                                      │  │                                        │  
   ╰──────────────────────────────────────────────────────────────────────╯  ╰────────────────────────────────────────╯  
+  daemon offline — run `rufio dev` for live updates                                                                     
   1 · substrate 2 · fleet 3 · channels 4 · goals 5 · memory : · cmd ? · help esc · nav i · compose                      

@@ -36,7 +36,7 @@ Cross-vendor, cross-harness, cross-machine. The agents propose, observe, confirm
 
 ```
 > Every other product in this space is building a brain.
-> We're building the surface where many brains agree.
+> We're building what brains run on.
 ```
 
 ## Why believe this

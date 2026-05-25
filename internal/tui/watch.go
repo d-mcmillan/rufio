@@ -11,7 +11,6 @@
 package tui
 
 import (
-	"errors"
 	"os"
 	"path/filepath"
 	"sort"
@@ -23,6 +22,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 
 	"github.com/d-mcmillan/rufio/internal/lib/attention"
+	"github.com/d-mcmillan/rufio/internal/lib/devhealth"
 	"github.com/d-mcmillan/rufio/internal/lib/gdl"
 )
 
@@ -59,7 +59,8 @@ type ConfirmMsg struct {
 }
 
 // DaemonOnlineMsg carries the result of the periodic daemon-online
-// check. Online is true when .rufio/locks/dev.pid exists on disk.
+// check. Online is true when .rufio/dev.heartbeat reports a fresh
+// last_tick (within devhealth.StaleThreshold); see DaemonOnline.
 type DaemonOnlineMsg struct {
 	Online bool
 }
@@ -488,19 +489,23 @@ func stampFromID(id string) int64 {
 	return n
 }
 
-// DaemonOnline checks whether .rufio/locks/dev.pid exists. Used at
-// startup and on every PollDaemonOnline tick. Per plan D22.13.
+// DaemonOnline returns true iff the daemon's heartbeat at
+// .rufio/dev.heartbeat is fresh (last_tick within devhealth.StaleThreshold).
+//
+// HISTORICAL (pre-v1.0.6.3): this used to stat .rufio/locks/dev.pid and
+// return true whenever the file existed. That was wrong: when the
+// daemon died ungracefully (SIGKILL, crash, OOM, pkill), the PID file
+// was left on disk → DaemonOnline returned true forever → the TUI kept
+// rendering `live` / `syncing` indicators against a dead daemon. Fixed
+// in v1.0.6.3 to use the existing #154 heartbeat staleness check (the
+// same signal `rufio dev --status` reports), which fails closed:
+// missing/stale/malformed heartbeat ⇒ offline.
 func DaemonOnline(root string) bool {
-	_, err := os.Stat(filepath.Join(root, ".rufio", "locks", "dev.pid"))
-	if err == nil {
-		return true
-	}
-	if errors.Is(err, os.ErrNotExist) {
+	hb, ok, _ := devhealth.ReadHeartbeat(root)
+	if !ok {
 		return false
 	}
-	// Any other error → treat as offline so the TUI doesn't claim the
-	// daemon is up when we can't actually tell.
-	return false
+	return time.Since(hb.LastTick) < devhealth.StaleThreshold
 }
 
 // PollDaemonOnlineInterval is the cadence at which the TUI re-checks

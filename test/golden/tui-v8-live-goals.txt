@@ -1,4 +1,4 @@
-  rufio · substrate  ⠋ syncing                                   substrate ·   fleet ·   channels · ● goals ·   memory  
+  rufio · substrate  · offline                                   substrate ·   fleet ·   channels · ● goals ·   memory  
   ╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮  
   │                                                                                                                  │  
   │  ◆ goals  2 active · customer:5821                                                                               │  
@@ -35,6 +35,6 @@
   │                                                                                                                  │  
   │                                                                                                                  │  
   │                                                                                                                  │  
-  │                                                                                                                  │  
   ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯  
+  daemon offline — run `rufio dev` for live updates                                                                     
   1 · substrate 2 · fleet 3 · channels 4 · goals 5 · memory : · cmd ? · help esc · nav i · compose                      

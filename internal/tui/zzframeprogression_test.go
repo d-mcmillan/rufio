@@ -37,6 +37,14 @@ func advanceN(a App, msg tea.Msg, n int) App {
 // LoadedMsg seam, exactly like the other gates; NO live fsnotify /
 // wall-clock). selected mirrors NewApp's freshest-row default so the
 // decision-row caret-blink end-to-end check still sees the ▮.
+//
+// v1.0.6.3 (Bundle F): also injects DaemonOnlineMsg{Online:true} so the
+// spinner/sparkline/live-badge animations exist to test. With daemon
+// offline (the NewApp default for /r) those four "lying" indicators
+// are now correctly suppressed (F1-F4), which would make the cadence-
+// wrap invariants a tautology. The frame-progression gate is testing
+// the spinner/sparkline cadences themselves, so it must run in the
+// online state where those animations render.
 func freshSized(t *testing.T, w, h int) App {
 	t.Helper()
 	a, _ := NewApp("/r")
@@ -49,6 +57,12 @@ func freshSized(t *testing.T, w, h int) App {
 	// populated 4-node arc (NewApp on the fake root hydrates the
 	// operator-only mesh). NO live fsnotify / wall-clock.
 	m, _ = app.Update(meshLoadedMsg{mesh: pinnedMesh()})
+	app = m.(App)
+	// v1.0.6.3 (Bundle F): the spinner/sparkline/live-badge cadences are
+	// suppressed when daemonOnline is false. Inject the online state so
+	// CADENCE 1/1b/1c (header dots / arc / bouncing) and CADENCE 3
+	// (sparkline) render real animations to assert against.
+	m, _ = app.Update(DaemonOnlineMsg{Online: true})
 	app = m.(App)
 	app.selected = lastRowIndex(app.substrate)
 	return app

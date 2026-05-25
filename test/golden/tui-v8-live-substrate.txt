@@ -34,7 +34,7 @@
   │                                                                      │  │  ROUTING  4 linked · quorum 2/3        │  
   │  › @fleet type to broadcast · @agent to direct · /cmd for actions▮   │  │                                        │  
   │                                                                      │  │                                        │  
-  │          ⏎ send · ⇧⏎ newline · / command · @ target · compose        │  │                                        │  
+  │          ⏎ send · ⇧⏎/⌃J newline · / command · @ target · compose     │  │                                        │  
   │                                                                      │  │                                        │  
   ╰──────────────────────────────────────────────────────────────────────╯  ╰────────────────────────────────────────╯  
   1 · substrate 2 · fleet 3 · channels 4 · goals 5 · memory : · cmd ? · help esc · nav i · compose                      

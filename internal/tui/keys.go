@@ -35,7 +35,7 @@ type keyBinding struct {
 // work there).
 var keyMap = []keyBinding{
 	{"(type)", "compose: text → broadcast · @agent → direct · /cmd → action"},
-	{"⏎ / ⇧⏎", "compose: send · insert newline"},
+	{"⏎ / ⇧⏎ / ⌃J", "compose: send · insert newline · insert newline (Terminal.app fallback)"},
 	{"esc", "compose → nav (or close overlay / drill-down)"},
 	{"i", "nav → compose"},
 	{"c / r", "nav: confirm / refute the selected decision row"},

@@ -395,10 +395,10 @@ func TestComposerEdit_V8VisualPreserved(t *testing.T) {
 	out := stripSGR(a.View())
 
 	for _, want := range []string{
-		"›",          // the v8 prompt
-		"@fleet",     // the v8 target chip
-		"⏎ send",     // the hint row
-		"⇧⏎ newline", // the hint row
+		"›",             // the v8 prompt
+		"@fleet",        // the v8 target chip
+		"⏎ send",        // the hint row
+		"⇧⏎/⌃J newline", // the hint row (v1.0.6.3: surfaces Ctrl+J fallback for Terminal.app)
 		"/ command",
 		"@ target",
 		" / 2000",            // the N / 2000 counter shape

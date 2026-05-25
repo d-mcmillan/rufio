@@ -197,6 +197,20 @@ func (s *series) advance(tick int) {
 	s.values = append(s.values[1:], nextSample(tick))
 }
 
+// advanceWithSample shifts the ring one sample left and appends the
+// caller-provided sample. v1.0.6.3 (Bundle F): the live App calls this
+// from the 500ms seriesTickMsg handler with the REAL events/sec count
+// observed since the last tick (a sliding-window rate over substrate
+// writes). The deterministic advance(tick) path is preserved for tests
+// + goldens (frame-0 invariant). Per-record-type counts feeding into
+// rate live on App (ThoughtMsg / ConfirmMsg / AttentionMsg arrival).
+func (s *series) advanceWithSample(sample int) {
+	if sample < 0 {
+		sample = 0
+	}
+	s.values = append(s.values[1:], sample)
+}
+
 // window is the chat-chrome history window: the sparkWidth samples
 // ending just BEFORE the latest (rate) sample —
 // series[seriesLen-sparkWidth-1 : seriesLen-1]. (The documented

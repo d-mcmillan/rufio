@@ -12,6 +12,7 @@ import (
 
 	"github.com/d-mcmillan/rufio/internal/lib/attention"
 	"github.com/d-mcmillan/rufio/internal/lib/confirm"
+	"github.com/d-mcmillan/rufio/internal/lib/devhealth"
 	"github.com/d-mcmillan/rufio/internal/lib/gdl"
 	"github.com/d-mcmillan/rufio/internal/lib/thought"
 )
@@ -150,30 +151,45 @@ func TestInitialWalkCapsAtMax(t *testing.T) {
 	}
 }
 
-// TestDaemonOnlineDetectsPidFile verifies the daemon-online check
-// flips true once .rufio/locks/dev.pid is written and back to false
-// when it's removed.
-func TestDaemonOnlineDetectsPidFile(t *testing.T) {
+// TestDaemonOnlineDetectsFreshHeartbeat verifies the v1.0.6.3 fix to
+// DaemonOnline: it now reads .rufio/dev.heartbeat (the #154 daemon-
+// supervision heartbeat) and treats the daemon as online iff last_tick
+// is within devhealth.StaleThreshold. The pre-v1.0.6.3 implementation
+// only stat'd .rufio/locks/dev.pid — which left the PID file behind
+// when the daemon died ungracefully (SIGKILL, crash, OOM, pkill), so
+// the TUI rendered `live`/`syncing` indicators against a dead daemon
+// forever.
+//
+// Three branches the new implementation must satisfy:
+//
+//  1. No heartbeat file        → DaemonOnline=false (cold-start case)
+//  2. Fresh heartbeat (now)    → DaemonOnline=true  (daemon ticking)
+//  3. Stale heartbeat (>30s)   → DaemonOnline=false (dead-or-paused case)
+func TestDaemonOnlineDetectsFreshHeartbeat(t *testing.T) {
 	root := t.TempDir()
+
+	// (1) No heartbeat at cold start ⇒ offline.
 	if DaemonOnline(root) {
-		t.Fatalf("expected DaemonOnline=false with no pid file")
+		t.Fatalf("expected DaemonOnline=false with no heartbeat file")
 	}
-	pidDir := filepath.Join(root, ".rufio", "locks")
-	if err := os.MkdirAll(pidDir, 0o755); err != nil {
-		t.Fatal(err)
-	}
-	pidFile := filepath.Join(pidDir, "dev.pid")
-	if err := os.WriteFile(pidFile, []byte("12345"), 0o644); err != nil {
+
+	// (2) Fresh heartbeat ⇒ online.
+	now := time.Now()
+	if err := devhealth.WriteHeartbeat(root, 12345, now.Add(-1*time.Second), now); err != nil {
 		t.Fatal(err)
 	}
 	if !DaemonOnline(root) {
-		t.Fatalf("expected DaemonOnline=true after writing pid file")
+		t.Fatalf("expected DaemonOnline=true with fresh heartbeat")
 	}
-	if err := os.Remove(pidFile); err != nil {
+
+	// (3) Stale heartbeat (last_tick older than StaleThreshold) ⇒
+	// offline — the v1.0.6.3 fix's central case.
+	stale := now.Add(-(devhealth.StaleThreshold + 5*time.Second))
+	if err := devhealth.WriteHeartbeat(root, 12345, now.Add(-2*time.Minute), stale); err != nil {
 		t.Fatal(err)
 	}
 	if DaemonOnline(root) {
-		t.Fatalf("expected DaemonOnline=false after removing pid file")
+		t.Fatalf("expected DaemonOnline=false with stale heartbeat (>StaleThreshold old) — this is the dead-daemon case")
 	}
 }
 
@@ -353,8 +369,8 @@ func TestPollDaemonOnlineCmdNotNil(t *testing.T) {
 	}
 	// tea.Tick blocks for the interval; we don't actually invoke it
 	// here (would block 2s). Just verify the shape — the integration
-	// path is covered by TestDaemonOnlineDetectsPidFile + the Model
-	// tests.
+	// path is covered by TestDaemonOnlineDetectsFreshHeartbeat + the
+	// Model tests.
 }
 
 // TestWatchPathsIncludesConfirms is the PR-G1 retained-reader extension

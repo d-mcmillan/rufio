@@ -174,11 +174,23 @@ type App struct {
 	// (80/90/220/500/1000ms). Zero value = frame-0 (every golden test
 	// renders here — drive() never sends a tick Msg). View() reads it.
 	anim anim
-	// series is the deterministic 36-sample sparkline ring. It advances
-	// one sample per 500ms seriesTickMsg (in step with anim.series) so
-	// the chat-chrome sparkline + rate are a pure function of tick
-	// COUNT, never a wall-clock. Nil-safe: lazily created in NewApp.
+	// series is the 36-sample sparkline ring. v1.0.6.3 (Bundle F) wires
+	// it to REAL substrate event rate: every 500ms seriesTickMsg, the
+	// App computes events_per_sec from the eventTickCount field (events
+	// observed since the previous tick: ThoughtMsg + ConfirmMsg +
+	// AttentionMsg arrivals from the fsnotify watcher), feeds the count
+	// into series.advanceWithSample, and resets the counter. The
+	// deterministic series.advance(tick) path remains for tests + the
+	// frame-0 golden invariant. Nil-safe: lazily created in NewApp.
 	series *series
+	// eventTickCount accumulates substrate events received since the
+	// previous seriesTickMsg. ThoughtMsg, ConfirmMsg, and AttentionMsg
+	// increment it; the 500ms series tick reads it, multiplies by 2
+	// (one tick = 0.5s), feeds the result into series as events/sec,
+	// then resets to 0. Reset-on-tick gives a 500ms sliding rate; the
+	// jitter is acceptable for a v1 ambient indicator and matches the
+	// resolution callers expect from a 2 Hz sparkline.
+	eventTickCount int
 
 	// ── PR-G1: live substrate state ─────────────────────────────────
 	//
@@ -846,14 +858,20 @@ func (a App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return a, tickEvery(typingPeriod, typingTickMsg{})
 	case seriesTickMsg:
 		a.anim.series++
-		// Advance the deterministic ring in lock-step with the counter
-		// (the jsx slice(1)+append shape). nil-safe: a test that
-		// constructs App without NewApp still won't panic.
+		// v1.0.6.3 (Bundle F): advance the series ring with the REAL
+		// events/sec rate observed since the previous tick. eventTickCount
+		// has been incremented on each ThoughtMsg / ConfirmMsg /
+		// AttentionMsg arrival; tick interval is 500ms so the rate is
+		// eventTickCount * 2. Reset the counter for the next tick.
+		// Nil-safe: a test that constructs App without NewApp still won't
+		// panic.
+		rate := a.eventTickCount * 2
+		a.eventTickCount = 0
 		if a.series == nil {
 			a.series = newSeries()
 		} else {
 			s := *a.series
-			s.advance(a.anim.series)
+			s.advanceWithSample(rate)
 			a.series = &s
 		}
 		return a, tickEvery(seriesPeriod, seriesTickMsg{})
@@ -898,6 +916,10 @@ func (a App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// keeps the mesh in lock-step with the chat. STILL exactly ONE
 		// watcher re-arm (the drain invariant) — the two loaders are
 		// independent one-shots batched UNDER the single re-arm.
+		//
+		// v1.0.6.3 (Bundle F): also bump the events-per-second counter
+		// for the substrate-panel sparkline. Reset on each seriesTickMsg.
+		a.eventTickCount++
 		return a, a.watcherRearmWith(tea.Batch(a.loadSubstrateCmd(), a.loadMeshCmd()))
 
 	case AttentionMsg:
@@ -909,6 +931,10 @@ func (a App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// once (the drain invariant — never zero: stream stops; never
 		// twice: racy double-drain). No substrate re-read (an attention
 		// record is not a broadcast @thought; the chat is unchanged).
+		//
+		// v1.0.6.3 (Bundle F): also bump the events-per-second counter
+		// for the substrate-panel sparkline. Reset on each seriesTickMsg.
+		a.eventTickCount++
 		return a, a.watcherRearmWith(a.loadMeshCmd())
 
 	case ChannelMsg, ChannelMessageMsg, GoalMsg, InboxMsg:
@@ -1605,8 +1631,12 @@ func (a App) chatScrollMax() int {
 	if h < 1 {
 		h = 1
 	}
-	// Mirror View(): body height = total − header − footer.
-	bodyH := h - lipgloss.Height(a.renderHeader(w)) - lipgloss.Height(a.renderFooter(w))
+	// Mirror View(): body height = total − header − footer − (offline hint, if any).
+	hintH := 0
+	if hint := a.renderOfflineHint(w); hint != "" {
+		hintH = lipgloss.Height(hint)
+	}
+	bodyH := h - lipgloss.Height(a.renderHeader(w)) - lipgloss.Height(a.renderFooter(w)) - hintH
 	if bodyH < 1 {
 		bodyH = 1
 	}
@@ -2119,10 +2149,15 @@ func (a App) View() string {
 
 	header := a.renderHeader(w)
 	footer := a.renderFooter(w)
+	hint := a.renderOfflineHint(w) // F5: empty string when daemon online (no chrome impact)
 	headerH := lipgloss.Height(header)
 	footerH := lipgloss.Height(footer)
+	hintH := 0
+	if hint != "" {
+		hintH = lipgloss.Height(hint)
+	}
 
-	bodyH := h - headerH - footerH
+	bodyH := h - headerH - footerH - hintH
 	if bodyH < 1 {
 		bodyH = 1
 	}
@@ -2185,7 +2220,27 @@ func (a App) View() string {
 	// through the gutters / gap / void) — that is INTENDED and correct.
 	// Structure is carried by the Ring-toned panel borders + the
 	// Ring-toned full-width section rules, not by bg contrast.
+	if hint != "" {
+		return lipgloss.JoinVertical(lipgloss.Left, header, body, hint, footer)
+	}
 	return lipgloss.JoinVertical(lipgloss.Left, header, body, footer)
+}
+
+// renderOfflineHint is the v1.0.6.3 (F5) one-line teaching footer that
+// surfaces ABOVE the keybind row when the daemon is offline. Converts a
+// confusing UI moment ("why isn't anything happening?") into a teaching
+// moment ("oh — run `rufio dev`"). Returns "" when the daemon is online
+// so the View() height math is byte-identical to v1.0.6.2 for the
+// daemon-up case. Dim styling — informational, never alarming. Inset
+// by bodyGutter to align with the header/footer columns.
+func (a App) renderOfflineHint(width int) string {
+	if a.daemonOnline {
+		return ""
+	}
+	msg := lipgloss.NewStyle().
+		Foreground(styles.Palette.Dim).
+		Render("daemon offline — run `rufio dev` for live updates")
+	return gutter(msg, width)
 }
 
 // gradientWordmark applies a per-character color sweep across s, cycling
@@ -2271,6 +2326,12 @@ func gutter(content string, width int) string {
 // and the right-aligned quiet tabs. Border-LESS, on the screen bg,
 // inset by the bodyGutter (jsx header, lines 204-222). At anim.spin==0
 // the frame is dots[0]=⠋ — byte-identical to the pre-PR-F static const.
+//
+// v1.0.6.3 (F1): when the daemon is offline the "syncing" indicator
+// LIES — nothing is syncing because nothing is being watched. The
+// spinner + "syncing" label are suppressed when !a.daemonOnline; a
+// quiet Dim "offline" tag takes their place so the slot is still
+// occupied (preserves the wordmark/tabs alignment) but reads honestly.
 func (a App) renderHeader(width int) string {
 	inner := width - 2*bodyGutter
 	if inner < 1 {
@@ -2279,14 +2340,22 @@ func (a App) renderHeader(width int) string {
 
 	mark := gradientWordmark(wordmark)
 
-	spinner := lipgloss.NewStyle().
-		Foreground(styles.Palette.Accent).
-		Render(spinnerFrame(spinnerDots, a.anim.spin))
-	syncing := lipgloss.NewStyle().
-		Foreground(styles.Palette.Dim).
-		Render(" syncing")
+	var statusSegment string
+	if a.daemonOnline {
+		spinner := lipgloss.NewStyle().
+			Foreground(styles.Palette.Accent).
+			Render(spinnerFrame(spinnerDots, a.anim.spin))
+		syncing := lipgloss.NewStyle().
+			Foreground(styles.Palette.Dim).
+			Render(" syncing")
+		statusSegment = spinner + syncing
+	} else {
+		statusSegment = lipgloss.NewStyle().
+			Foreground(styles.Palette.Dim).
+			Render("· offline")
+	}
 
-	left := mark + "  " + spinner + syncing
+	left := mark + "  " + statusSegment
 	tabs := a.renderTabs()
 
 	leftW := lipgloss.Width(left)
@@ -2651,7 +2720,14 @@ const routingBottomPad = ComposerHeight - 2
 // deliveries) — never hardcoded, never the fixture. spin is the shared
 // 80ms cadence counter (anim.spin); at spin==0 the frame is
 // bouncing[0]=⠁ — byte-identical to the pre-PR-F static const.
-func renderMeshHeader(innerWidth, spin int, mesh meshState) string {
+//
+// v1.0.6.3 (F3): the right-side `· live` badge implies live mesh
+// updates. When the daemon is offline the mesh state is stale — the
+// fsnotify watcher isn't running, so the badge is a lie. Suppress
+// both the spinner and the `live` label when daemonOnline is false;
+// the panel still renders normally (the mesh body remains accurate
+// for whatever was on disk at startup).
+func renderMeshHeader(innerWidth, spin int, mesh meshState, daemonOnline bool) string {
 	title := lipgloss.NewStyle().
 		Foreground(styles.Palette.Accent).
 		Bold(true).
@@ -2660,6 +2736,13 @@ func renderMeshHeader(innerWidth, spin int, mesh meshState) string {
 		Foreground(styles.Palette.Dim).
 		Render("  " + itoa(len(mesh.Nodes)) + " nodes · " + itoa(len(mesh.Edges)) + " links")
 	left := title + meta
+
+	if !daemonOnline {
+		// No spinner, no `live` badge — daemon-offline whisper is
+		// surfaced in the chat chrome (substrateOfflineNote) and the
+		// new F5 footer hint. The mesh header reads as a pure title.
+		return left
+	}
 
 	spin2 := lipgloss.NewStyle().
 		Foreground(styles.Palette.Accent2).
@@ -2765,7 +2848,7 @@ func (a App) meshPanel(width, height int) string {
 	// fixture. This is the SAME a.mesh in BOTH the substrate right-rail
 	// (meshRail) and the fleet tab (renderTabPanel) — same renderer, same
 	// data, per the v8 design.
-	header := clampLine(renderMeshHeader(contentWidth, a.anim.spin, a.mesh), contentWidth)
+	header := clampLine(renderMeshHeader(contentWidth, a.anim.spin, a.mesh, a.daemonOnline), contentWidth)
 	routing := clampBlock(renderRoutingStrip(contentWidth, a.mesh, a.substrate), contentWidth)
 
 	headerH := lipgloss.Height(header)
@@ -2892,17 +2975,24 @@ func distinctAuthors(rows []ThreadMsg) int {
 //     console, NEVER gated on the daemon — history still renders) is
 //     appended to the LEFT meta when PollDaemonOnline reports the daemon
 //     down. It is on the LEFT (a status whisper next to "minds/linked",
-//     where the old TUI also surfaced it, tui.go:661) rather than the
-//     RIGHT so the right activity readout keeps its FIXED shape +
-//     width-fit budget — adding a 19-cell note to the right segment
-//     would blow the two-panel chat width and drop the sparkline
-//     wholesale (the §C1 fit policy). The right-side `live` is the
-//     view-is-live-updating label (history live-renders regardless of
-//     daemon state — accurate), not a daemon-up claim; the daemon FACT
-//     is the explicit left whisper.
+//     where the old TUI also surfaced it, tui.go:661) so the daemon
+//     FACT is named in plain text, not implied by the absence of
+//     spinners on the right.
 //
-// The sparkline/rate/arc are the UNCHANGED PR-F cadences (frame-0
-// byte-identical at anim==0 + seeded series).
+// v1.0.6.3 (Bundle F / F2 + F4): the right-side activity readout —
+// sparkline + `N/s` rate + arc spinner + `live` badge — is now GATED
+// on a.daemonOnline. When the daemon is offline the entire right
+// segment collapses to empty; when online it renders byte-identically
+// to v1.0.6.2 (frame-0 still byte-identical at anim==0 + seeded
+// series + online). The pre-Bundle-F framing — "the right-side `live`
+// is the view-is-live-updating label, history live-renders regardless
+// of daemon state — accurate" — was the v1.0.6.2 design but read as
+// a lie next to the truthful LEFT `· daemon offline ·` whisper when
+// the daemon was down (the sparkline series is a deterministic
+// stand-in pending PR-G real event-rate data, NOT a live feed). The
+// LEFT whisper is now the SINGLE truth-bearing daemon-state marker
+// in the chrome strip; the right segment is the explicit live-data
+// readout it always claimed to be.
 func (a App) renderChatChrome(innerWidth int) string {
 	channel := lipgloss.NewStyle().
 		Foreground(styles.Palette.Accent).
@@ -2961,22 +3051,36 @@ func (a App) renderChatChrome(innerWidth int) string {
 	if ser == nil {
 		ser = newSeries()
 	}
-	spark := renderSparkline(ser.window())
-	rate := lipgloss.NewStyle().
-		Foreground(styles.Palette.Dim).
-		Render(" " + itoa(ser.rate()) + "/s")
-	dotS := styles.Hairline.Render(" · ")
-	arc := lipgloss.NewStyle().
-		Foreground(styles.Palette.Accent).
-		Render(spinnerFrame(spinnerArc, a.anim.spin))
-	// `live` = the view-is-live-updating label (history live-renders
-	// regardless of daemon state). The daemon-up/down FACT is the
-	// explicit Warm whisper on the LEFT (added above) — kept off the
-	// right so this readout's shape + width-fit budget is unchanged
-	// (frame-0 byte-identical at anim==0 + seeded series + online).
-	live := lipgloss.NewStyle().
-		Foreground(styles.Palette.Dim).
-		Render(" live")
+	// v1.0.6.3 (Bundle F): the right-side activity readout — sparkline,
+	// `N/s` rate, arc spinner, and `live` badge — is now WIRED to real
+	// substrate event rate (#226: events_per_sec sampled at 2 Hz over
+	// ThoughtMsg + ConfirmMsg + AttentionMsg arrivals; see app.go's
+	// seriesTickMsg handler). The series advances with a real sample
+	// each tick; ser.window() and ser.rate() report observed activity.
+	//
+	// Daemon offline (F2 + F4): whole right segment is empty; the
+	// left-side `· daemon offline ·` whisper names the state. Without a
+	// daemon, no fsnotify drain is running so eventTickCount would stay
+	// at 0 (rate=0) regardless — but suppressing the segment is the
+	// stronger guarantee.
+	//
+	// Mesh particles + node pulse rings (rendered elsewhere) animate
+	// over real edges (outbox∩inbox routing) and real attention-bearing
+	// nodes — ambient over REAL state.
+	var spark, rate, dotS, arc, live string
+	if a.daemonOnline {
+		spark = renderSparkline(ser.window())
+		rate = lipgloss.NewStyle().
+			Foreground(styles.Palette.Dim).
+			Render(" " + itoa(ser.rate()) + "/s")
+		dotS = styles.Hairline.Render(" · ")
+		arc = lipgloss.NewStyle().
+			Foreground(styles.Palette.Accent).
+			Render(spinnerFrame(spinnerArc, a.anim.spin))
+		live = lipgloss.NewStyle().
+			Foreground(styles.Palette.Dim).
+			Render(" live")
+	}
 	right := spark + rate + dotS + arc + live
 
 	leftW := lipgloss.Width(left)

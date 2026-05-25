@@ -113,9 +113,17 @@ type composerHint struct {
 
 // composerHints is the ordered hint set, a verbatim port of the jsx
 // hint spans (rufio-bubbletea-v8.jsx lines 297-300).
+// v1.0.6.3 (Bundle F doc-nit): the `newline` hint surfaces BOTH bindings —
+// `⇧⏎` (Shift+Enter, works in iTerm2 / Kitty / Alacritty / WezTerm /
+// most modern terminals) and `⌃J` (Ctrl+J, the protocol-level newline
+// byte that ALWAYS works, including macOS Terminal.app which cannot
+// distinguish Shift+Enter from plain Enter at the protocol level). The
+// composer Update path already accepts both keymaps (app.go ~1334); this
+// surfaces the fallback so users in any terminal know at least one
+// working combo.
 var composerHints = []composerHint{
 	{"⏎", "send"},
-	{"⇧⏎", "newline"},
+	{"⇧⏎/⌃J", "newline"},
 	{"/", "command"},
 	{"@", "target"},
 }
@@ -156,7 +164,7 @@ func caretCell(on bool, color lipgloss.Color) string {
 //	<blank>                                              ── jsx padding 10px (top)
 //	<› prompt> <@fleet chip> <sample text▮>   <57 / 2000>  ── input row
 //	<blank>                                              ── jsx gap:6
-//	<8-cell indent>⏎ send · ⇧⏎ newline · / command · @ target · <status>
+//	<8-cell indent>⏎ send · ⇧⏎/⌃J newline · / command · @ target · <status>
 //	<blank>                                              ── jsx padding 10px (btm)
 //
 // The blank rows are GENUINE empty lines so the chat panel's Panel bg

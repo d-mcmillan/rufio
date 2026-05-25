@@ -1,6 +1,6 @@
-  rufio · substrate  ⠋ syncing                                   substrate · ● fleet ·   channels ·   goals ·   memory  
+  rufio · substrate  · offline                                   substrate · ● fleet ·   channels ·   goals ·   memory  
   ╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮  
-  │  ◆ MESH  4 nodes · 5 links                                                                               ⠁ live  │  
+  │  ◆ MESH  4 nodes · 5 links                                                                                       │  
   │                                                                                                                  │  
   │                                                                                                                  │  
   │                                                                                                                  │  
@@ -29,7 +29,6 @@
   │                                                                                                                  │  
   │                                                                                                                  │  
   │                                                                                                                  │  
-  │                                                                                                                  │  
   │  ──────────────────────────────────────────────────────────────────────────────────────────────────────────────  │  
   │  ROUTING  4 linked · quorum 2/3 · append-only                                                                    │  
   │                                                                                                                  │  
@@ -37,4 +36,5 @@
   │                                                                                                                  │  
   │                                                                                                                  │  
   ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯  
+  daemon offline — run `rufio dev` for live updates                                                                     
   1 · substrate 2 · fleet 3 · channels 4 · goals 5 · memory : · cmd ? · help esc · nav i · compose                      
