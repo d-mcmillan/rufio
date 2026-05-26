@@ -1,0 +1,87 @@
+name: Exclusions Guard
+
+# Public-repo backstop for the cherry-pick playbook. Mirrors the 8-check gate
+# in scripts/cherry-pick-to-public.sh. Blocks main if anything internal sneaks in.
+#
+# This file lives at scripts/public-templates/exclusions-guard.yml in the PRIVATE
+# repo. The cherry-pick playbook (Phase E commit 10) copies it to
+# .github/workflows/exclusions-guard.yml in the PUBLIC repo. It does NOT run in
+# private (private legitimately carries CLAUDE.md, .memory/, etc.).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  exclusions-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Tree absence
+        run: |
+          fail=0
+          for p in .memory .claude docs/plans docs/design legacy CLAUDE.md bun.lock \
+                   docs/followups.md docs/dogfood-notes.md docs/swarm-demo.md \
+                   docs/launch-script.md docs/cross-harness-runbook.md \
+                   docs/cross-harness-prompts docs/live-agent-demo.md \
+                   scripts/cherry-pick-to-public.sh scripts/public-templates \
+                   internal/README.md internal/strategy.md \
+                   internal/conversation-summary.md internal/kickoff-prompt.md; do
+            if [ -e "$p" ]; then
+              echo "::error::Excluded path present: $p"
+              fail=1
+            fi
+          done
+          if [ "$fail" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Identity audit
+        run: |
+          # Stale-username pattern is built at runtime so the error message
+          # itself doesn't trip the audit (self-referential false-positive).
+          pat="damonf""mcmillan"
+          if grep -rEn "\\b${pat}\\b" . \
+            --include='*.go' --include='*.md' --include='*.toml' \
+            --include='*.yml' --include='*.yaml' --include='*.json' \
+            --include='*.mod' --include='*.sum' --include='*.sh' \
+            --exclude-dir=.git 2>/dev/null; then
+            echo "::error::Stale GitHub-username pattern present in tracked file"
+            exit 1
+          fi
+
+      - name: User-path audit
+        run: |
+          # Built at runtime so the error string itself doesn't trip.
+          # No trailing slash: matches both `/Users/damonmcmillan/...` and
+          # bare references like `/Users/damonmcmillan` (e.g. cwd dumps).
+          pat="/Users/""damonmcmillan"
+          if grep -rln "${pat}" . --exclude-dir=.git --exclude=exclusions-guard.yml 2>/dev/null; then
+            echo "::error::Local user-path leak detected"
+            exit 1
+          fi
+
+      - name: Memory-file ref audit
+        run: |
+          if grep -rEn 'project_[a-z_]+\.md|feedback_[a-z_]+\.md' . \
+            --include='*.go' --include='*.md' --include='*.toml' --include='*.yml' \
+            --exclude-dir=.git --exclude=.gitignore 2>/dev/null; then
+            echo "::error::Memory-file reference leaked into public"
+            exit 1
+          fi
+
+      - name: Strategy-doc audit
+        run: |
+          # Built at runtime so the audit doesn't trip on its own
+          # workflow file (which lists these paths in the Tree-absence
+          # step's loop). .gitignore legitimately lists the paths.
+          pat='internal/(README|strategy|conversation-summary|kickoff-prompt)\.md'
+          if grep -rEn "$pat" . \
+            --exclude-dir=.git --exclude=.gitignore \
+            --exclude=exclusions-guard.yml 2>/dev/null; then
+            echo "::error::Internal strategy-doc reference leaked"
+            exit 1
+          fi

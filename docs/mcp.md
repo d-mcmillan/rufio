@@ -1,6 +1,6 @@
 # MCP adapter (`rufio mcp`)
 
-> Shipped in v1.1. `rufio mcp` is a real MCP stdio server — not a stub.
+> Shipped. `rufio mcp` is a real MCP stdio server — not a stub.
 > For the full command list see [cli-reference.md](./cli-reference.md);
 > for primitive semantics see [primitives.md](./primitives.md).
 

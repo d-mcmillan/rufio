@@ -118,7 +118,7 @@ The platform team that just realised the orchestrator they were going to build i
 
 The CTO who refuses to bet the fleet on a single vendor's coordination layer.
 
-The Lost Boys. The ones building tools for themselves because the ones the grown-ups are selling don't fit.
+The indie builder. Making tools for themselves because what's available doesn't fit.
 
 ---
 
@@ -143,9 +143,7 @@ Agents are the new application stack. Every company is building them. Most are b
 
 The hyperscalers are racing to sell those companies a packaged platform. Those platforms will be vendor-locked, single-harness, and built for their cloud, not yours.
 
-The grown-ups will sell you a platform.
-
-We're building a foundation.
+Vendors will sell you a platform. We're building a foundation.
 
 ---
 

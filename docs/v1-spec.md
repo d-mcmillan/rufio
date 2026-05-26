@@ -1,13 +1,8 @@
 # Rufio v1 — Specification
 
-**Date:** 2026-05-08
-**Status:** Spec locked, ready to build
-**Issues addressed:** New initiative — no existing issues
-**References:**
-- `docs/plans/2026-05-05-context-platform-strategy.md`
-- `docs/plans/2026-05-05-rufio-manifesto.md`
+**Status:** v1 shipped. Surface locked; daemon, CLI, MCP, Python SDK, and hosted transport are all in tree.
 
-> The first shippable version of Rufio. Local-only, OSS, ruthlessly scoped. Designed to demonstrate the substrate hypothesis end-to-end: that a distributed agent fleet can think as one through a shell-and-grep-native context layer.
+> The first shippable version of Rufio. OSS, ruthlessly scoped. Designed to demonstrate the substrate hypothesis end-to-end: that a distributed agent fleet can think as one through a shell-and-grep-native context layer.
 
 ---
 
@@ -60,9 +55,9 @@ If those five land, v1 has done its job.
 **Key principle:** files are the data, files are the protocol, files are the network. The CLI is how anything (human or agent) interacts with the substrate. The daemon is the only "magic" — and it's just a file watcher with routing rules.
 
 **Build stack:**
-- Daemon + CLI: **Bun** (TypeScript, single binary, fast cold-start)
+- Daemon + CLI: **Go 1.25+** (single static binary, `go build ./cmd/rufio`)
 - Storage: **filesystem** (no database in v1)
-- Routing: **chokidar** for file watching
+- File watching: **fsnotify** (no native recursive watch — each subdir registered explicitly)
 - Records: **Greppable** (`.gdl`, `.gdlm`) — the platform eats its own dogfood
 
 ---
@@ -337,21 +332,23 @@ v1 ships (1) and (2). Pattern A (pull-based) is the documented default; Pattern 
 
 ## Shared server (multi-machine)
 
-v1 is local-only. The CLI talks to a daemon on the same machine via the project filesystem.
+The default substrate is local: the CLI talks to a `rufio dev` daemon on the same machine via the project filesystem. This is enough for any team running their agents on shared infrastructure.
 
-For multi-machine fleets, the abstraction stays the same — the CLI is the only thing the agent sees. v1.5 introduces:
+For multi-machine fleets, `rufio serve` shipped in v1.0.4 exposes the same surface over MCP-over-HTTPS with bearer-token auth. A continuous-sync local mirror keeps the file-native view canonical on every client.
 
 ```
-$ rufio remote add prod https://rufio.acme.com
-$ export RUFIO_REMOTE=prod
-# All commands now hit the remote daemon over HTTP/gRPC.
-```
+$ rufio serve --bind=0.0.0.0 --port=8443 --tls-cert=<path> --tls-key=<path>
 
-The agent's mental model never changes: same five primitives, same exit codes, same output format. Just a different transport behind the CLI.
+# On every client:
+$ export RUFIO_SERVER=https://rufio.example.com:8443
+$ export RUFIO_TOKEN=<bearer-token>
+# All commands now hit the hosted daemon — same primitives, same exit codes,
+# same output format. The transport changes; the agent's mental model does not.
+```
 
 ---
 
-## The killer demo (v1 launch script)
+## The walkthrough (v1 launch script)
 
 Five beats, ~5 minutes total. Each escalates the previous "oh fuck" moment.
 
@@ -554,7 +551,7 @@ Primitives we considered and decided against for v1, with reasoning:
 - [x] **TTL behaviour** — expired thoughts move to `.rufio/history/expired/` (audit trail preserved).
 - [x] **Concurrent writes** — append-only with explicit `supersedes` chains (Greppable's existing pattern).
 
-## Open decisions (still non-blocking)
+## What shipped (post-spec)
 
-- [ ] **Bun vs Go for the daemon binary** — Bun for v1 (matches CLI language, ships fast). Reconsider for Go in v1.5 if deployment surface or memory footprint demands it.
-- [ ] **First-language SDK** — TypeScript first; Python adapter as a wrapper around the CLI in v1.1.
+- **Language:** Go 1.25+ won the language decision. Single static binary; cold start <50ms on typical hardware. Ships via `go install github.com/d-mcmillan/rufio/cmd/rufio@<tag>`.
+- **First-language SDK:** Python (sync subprocess + HTTPS wrapper around the CLI) shipped in v1.0.5. The SDK never reimplements substrate logic — every method shells out to the `rufio` binary, so the CLI's `--json` output stays the single source of truth.

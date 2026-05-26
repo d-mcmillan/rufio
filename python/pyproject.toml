@@ -8,11 +8,8 @@ dynamic = ["version"]
 description = "Python SDK for Rufio — substrate for distributed agent cognition"
 readme = "README.md"
 requires-python = ">=3.10"
-# PEP 639 inline SPDX expression. Avoids the v1.0.5 launch-blocker
-# bug where `license = { file = "../LICENSE" }` (out-of-tree path)
-# caused hatchling's source-file discovery to misidentify the
-# package root and produce an empty wheel. Inline string also
-# eliminates the need to vendor LICENSE into python/.
+# PEP 639 inline SPDX expression — avoids out-of-tree license-path
+# resolution that historically confused hatchling's package discovery.
 license = "Apache-2.0"
 authors = [{ name = "d-mcmillan", email = "damon.f.mcmillan@gmail.com" }]
 keywords = ["rufio", "agent", "cognition", "substrate", "mcp"]
@@ -45,34 +42,17 @@ Issues = "https://github.com/d-mcmillan/rufio/issues"
 [tool.hatch.version]
 path = "rufio/_version.py"
 
-# Explicit build configuration — the v1.0.5 launch-blocker root
-# cause was hatchling building an empty wheel when given only
-# `[tool.hatch.build.targets.wheel] packages = ["rufio"]` plus a
-# `license = { file = "../LICENSE" }` referencing an out-of-tree
-# path. The combination confused hatchling's file-set discovery
-# (it walked up to the repo root to resolve ../LICENSE and lost
-# track of where the package root was). The fix has two parts:
-#
-#   1. Inline `license = "MIT"` (PEP 639) — no out-of-tree path.
-#   2. Explicit `include` directive on the wheel target that
-#      names the rufio package files. `packages = ["rufio"]`
-#      alone is supposed to be sufficient but proved not to be
-#      with the v1.0.5 layout.
-#
-# Sdist target gets a parallel include so source tarballs are
-# also non-empty if someone runs `python -m build --sdist`.
+# Explicit wheel target. `packages = ["rufio"]` + an explicit
+# `include` is belt-and-suspenders with the force-include directive
+# below — the combination guarantees the rufio package files land
+# in the wheel even when hatchling's default file-set walker behaves
+# inconsistently across layouts.
 [tool.hatch.build.targets.wheel]
 packages = ["rufio"]
 include = [
     "rufio/**/*.py",
     "README.md",
 ]
-# Hatchling's default file-set walker missed rufio/ entirely in
-# the v1.0.5 layout (likely because of the historical
-# license={file="../LICENSE"} pulling root resolution upward, but
-# the bug persists even after switching to inline license). The
-# force-include directive bypasses the walker and maps src→dest
-# directly. Belt-and-suspenders with `packages` above.
 [tool.hatch.build.targets.wheel.force-include]
 "rufio" = "rufio"
 

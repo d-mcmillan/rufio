@@ -3,7 +3,7 @@
 ## Session: 2026-05-21
 
 ### Entry 1 — startup
-- **NOTICED** [REDUCIBLE]: `rufio --version` printed "Shell cwd was reset to /Users/damonmcmillan" after every Bash call. Persistent annoyance — shell doesn't hold cwd between Bash invocations. Forces `cd /tmp/rufio-cross-harness-2026-05-21 && export RUFIO_AGENT_ID=agent-claude && <verb>` prefix on every single call. Real cognitive tax: ~2s of boilerplate per verb.
+- **NOTICED** [REDUCIBLE]: `rufio --version` printed "Shell cwd was reset to $HOME" after every Bash call. Persistent annoyance — shell doesn't hold cwd between Bash invocations. Forces `cd /tmp/rufio-cross-harness-2026-05-21 && export RUFIO_AGENT_ID=agent-claude && <verb>` prefix on every single call. Real cognitive tax: ~2s of boilerplate per verb.
 
 ### Entry 2 — wrong flag from scenario
 - **TAX** [REDUCIBLE]: Scenario says `rufio recall --topics=v1-2-roadmap` but the flag is `--types`/`--thought-types`, not `--topics`. ~6s lost to running it, getting exit 2, reading `--help`. Either scenario docs or the verb is out of sync. Cost: small but a quintessential cold-agent stumble — instructions disagreed with reality.

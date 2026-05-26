@@ -1,14 +1,12 @@
-# The 5-beat killer demo
+# Live walkthrough
 
-> ~5 minutes. Each beat escalates the previous "oh fuck" moment.
-
-Run this when v1 lands. It's the opening of the launch post.
+> ~5 minutes. Five beats — each escalates the previous "oh fuck" moment.
 
 ## Setup
 
 ```bash
 # Install Rufio (requires Go 1.25+):
-go install github.com/d-mcmillan/rufio/cmd/rufio@v1.0.6.2
+go install github.com/d-mcmillan/rufio/cmd/rufio@v1.0.6.3
 # Or build from source: see README's Install section.
 
 mkdir demo && cd demo && rufio init
@@ -66,9 +64,9 @@ Claude: rufio think --type=hypothesis --subject=customer:5821 \
 You: I'm stuck. Find someone with churn analysis skills and figure this out.
 
 Claude: rufio fleet --skill=churn-analysis
-        → agent:data-analyst (online)
+        → data-analyst (online)
 
-Claude: rufio summon agent:data-analyst --topic=customer:5821 \
+Claude: rufio summon data-analyst --topic=customer:5821 \
         --intent="need help with churn pattern"
         → channel ch-abc123 opened
 
@@ -155,4 +153,4 @@ Five beats. Five "oh fuck" moments:
 
 That's the substrate.
 
-> Want to prove it with *real* third-party harnesses (Claude Code + Gemini CLI + Cursor CLI) coordinating headless, zero orchestrator? See [`live-agent-demo.md`](./live-agent-demo.md) — the multi-harness live recipe.
+> Want to prove it with *real* third-party harnesses? See the [cross-harness captures](../captures/2026-05-21-cross-harness-live/) — every record from a 4-vendor live run, on disk, replayable.

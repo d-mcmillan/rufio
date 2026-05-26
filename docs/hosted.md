@@ -1,4 +1,4 @@
-# Rufio hosted mode (v1.0.4)
+# Rufio hosted mode
 
 Two agents on different infrastructures coordinate securely through a hosted Rufio daemon, with a file-native local mirror preserved on every client.
 
@@ -8,7 +8,7 @@ This page is the operational guide. For the CLI surface, see [cli-reference.md](
 
 Rufio v1.0.x ships **trusted-collaborator** auth: bearer tokens minted by a local operator, identity resolved server-side. This is sufficient for "one team runs the server, others bring tokens" topologies (Slack-trust).
 
-PKI / cryptographic identity / federation is the **v1.2 frontier**. v1.0.4 is honestly labeled "Research Preview" — production deployments outside trusted-collaborator settings should wait for v1.2.
+PKI / cryptographic identity / federation is the **v1.2 frontier**. Hosted mode is honestly labeled "Research Preview" — production deployments outside trusted-collaborator settings should wait for v1.2.
 
 ## Server setup
 
@@ -152,4 +152,4 @@ Revoked tokens are rejected by the server on subsequent calls. The record stays 
 
 - [cli-reference.md](./cli-reference.md) — flag-level CLI reference
 - [mcp.md](./mcp.md) — MCP tool surface (21 tools)
-- [v1.0.4-release-notes.md](./v1.0.4-release-notes.md) — what shipped + threat-model framing
+- [release-history/v1.0.4.md](./release-history/v1.0.4.md) — what shipped + threat-model framing

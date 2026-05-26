@@ -51,7 +51,7 @@ A flag on `recall` and `lineage`. Reconstructs the substrate's state at a past t
 A v2 feature: the substrate notices patterns across the fleet (*"these agents are stuck"*, *"this thought has 5 confirmations"*) and surfaces them. The substrate stops being passive plumbing.
 
 ### Greppable
-The grep-native data language used as Rufio's wire format. `@type|key:value|key:value`. Will be donated to an open standards foundation. Other formats (JSON, YAML, Markdown, custom) are first-class on the substrate.
+The grep-native data language used as Rufio's wire format. `@type|key:value|key:value`. Other formats (JSON, YAML, Markdown, custom) are first-class on the substrate.
 
 ### file-native agent
 An agent harness that already shells out and reads/writes files as part of its normal workflow. Examples: Claude Code, Cursor, Cline, Codex, Aider. The primary audience for Rufio's CLI surface.

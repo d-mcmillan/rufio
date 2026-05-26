@@ -2,14 +2,12 @@
 
 Thin sync wrapper around the [`rufio`](https://github.com/d-mcmillan/rufio) CLI for both local-subprocess and remote-HTTPS transports. The SDK never reimplements substrate logic — every method shells out to the `rufio` binary, so the CLI's `--json` output is the single source of truth for record shape.
 
-## Installation in v1.0.6
+## Installation
 
-> **NOTE: v1.0.6 does NOT publish to PyPI.** The decision to publish is gated by an explicit maintainer-driven session in a future release.
-
-Install directly from the repository:
+> **NOTE:** The SDK does not currently publish to PyPI. Pin to a tag and install from the repository.
 
 ```sh
-pip install git+https://github.com/d-mcmillan/rufio.git@v1.0.6.2#subdirectory=python
+pip install git+https://github.com/d-mcmillan/rufio.git@v1.0.6.3#subdirectory=python
 ```
 
 This installs the wheel that hatchling builds from `python/pyproject.toml`. Future versions may publish to PyPI; pin to a tag when that lands.
@@ -162,7 +160,7 @@ The SDK enforces the same security floor the CLI does:
 
 - **Subprocess args are always lists** (never `shell=True`). Even though the SDK accepts typed Python arguments, the defense-in-depth posture refuses to construct shell strings — your `intent="..."` cannot inject shell commands.
 - **TLS is verified by default.** The SSE consumer in `listen()` rejects plaintext `http://` unless `insecure_tls=True` AND the host is loopback. Same posture as the CLI's `--insecure-tls` flag.
-- **Bearer tokens are passed as CLI flags**, not environment variables (defense against env-leak to child processes).
+- **Bearer tokens are passed via the `RUFIO_TOKEN` environment variable**, never on argv. Argv is visible to any local user via `ps -ef`; environment is only readable by the process and its children.
 - **Identity is server-authoritative in remote mode.** A malicious `RUFIO_AGENT_ID` in env is ignored by the server; the bearer token resolves to the canonical agent.
 
 ## Version pinning
@@ -170,7 +168,7 @@ The SDK enforces the same security floor the CLI does:
 Pin the SDK to the same tag as your rufio binary to avoid surface drift:
 
 ```sh
-pip install "rufio @ git+https://github.com/d-mcmillan/rufio.git@v1.0.6.2#subdirectory=python"
+pip install "rufio @ git+https://github.com/d-mcmillan/rufio.git@v1.0.6.3#subdirectory=python"
 ```
 
 If you mix versions (SDK newer than binary), method signatures may reference flags the older binary doesn't recognise; the SDK will surface a `RufioError` with the CLI's "unknown flag" stderr.

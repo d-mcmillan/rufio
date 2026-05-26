@@ -90,7 +90,7 @@ File-native agents (Claude Code, Cursor, Cline, Codex, Aider) prefer the CLI bec
 - CLI is composable (`rufio recall ... | grep ... | head -1`)
 - CLI is streamable (`rufio listen | while read line; ...`)
 - Errors are native (exit codes + stderr)
-- No protocol setup, no SDK install — just `npm install -g rufio`
+- No protocol setup, no SDK install — just `go install github.com/d-mcmillan/rufio/cmd/rufio@latest`
 
 MCP is a second-class adapter for harnesses that don't shell well (older chatbots, web-only agents). The MCP surface exposes a curated **agent-participation subset** of the CLI (cognition, verification, channels, coordination, plus `listen`), deliberately excluding operator/governance/identity verbs — see [`docs/mcp.md`](./mcp.md) for the full contract.
 
@@ -105,16 +105,21 @@ Two patterns ship in v1:
 - **Pull (default):** agent calls `rufio recall --types=thought --since=<last-cycle>` periodically. Telepathy on demand. Latency: agent's reasoning cycle (5-30s).
 - **Push (`rufio listen`):** long-running command tails the agent's inbox; events stream to stdout. Latency: 50-500ms (filesystem-watcher latency).
 
-For most use cases, pull is enough. Push is for true real-time multi-agent coordination.
+For most use cases, pull is enough. Push is for low-latency multi-agent coordination.
 
-## Local now, shared later
+## Local first, hosted when you need it
 
-v1 is local-only — agents on the same machine share through the local filesystem. The CLI is the abstraction. v1.5 introduces remote daemons:
+The default surface is local — agents on the same machine share through the local filesystem and the CLI never needs more. For cross-machine fleets, `rufio serve` shipped in v1.0.4 exposes the same substrate over MCP-over-HTTPS with bearer-token auth:
 
 ```bash
-$ rufio remote add prod https://rufio.acme.com
-$ export RUFIO_REMOTE=prod
-# All commands now hit the remote daemon over HTTP/gRPC.
+# On the server
+$ rufio serve --bind=0.0.0.0 --port=8443 --tls-cert=<path> --tls-key=<path>
+
+# On every client
+$ export RUFIO_SERVER=https://rufio.example.com:8443
+$ export RUFIO_TOKEN=<bearer-token-from-admin-token-mint>
+# All commands now hit the hosted daemon. A continuous-sync local mirror
+# keeps the file-native view canonical on every client.
 ```
 
 The agent's mental model never changes. Same primitives, same exit codes, same output format. Just a different transport behind the CLI.
@@ -133,7 +138,7 @@ The trade-off: files are slower than in-memory caches at extreme write rates. v2
 
 Every record in Rufio is a Greppable line — `@type|key:value|key:value`. Examples in [`docs/v1-spec.md`](./v1-spec.md#wire-formats-greppable-everywhere).
 
-Greppable will be donated to an open standards foundation. Other formats (JSON, YAML, Markdown, custom schemas) are first-class on the substrate; Greppable is the format Rufio uses for its own internal records (config, attention, summons, channel meta).
+Other formats (JSON, YAML, Markdown, custom schemas) are first-class on the substrate; Greppable is the format Rufio uses for its own internal records (config, attention, summons, channel meta).
 
 ---
 

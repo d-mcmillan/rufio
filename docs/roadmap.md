@@ -95,16 +95,7 @@ The current quorum mechanic (3 distinct confirmers at >=0.85 confidence triggers
 
 ## TUI console + agnostic operator agent (strategic, post-v1)
 
-**Architectural principle (locked 2026-05-16, load-bearing):** Rufio is the
-substrate, never an agent harness. The "operator agent" is *any* harness
-driving the `rufio` CLI per the coordination protocol - no model/agent SDK
-ever links into Rufio core or the TUI binary; Claude-as-operator is a
-swappable per-run deployment choice. Substrate invariants are enforced
-CLI-side (a misbehaving harness must not poison the commons); the wire
-format + CLI contract is a versioned *public protocol*. *(The near-term
-work - making the v8 TUI an interactive console + state-aware cold-start  - 
-is tracked in the v8 rebuild plan, not here. The items below are the
-future of that surface.)*
+**Architectural principle:** Rufio is the substrate, never an agent harness. The "operator agent" is *any* harness driving the `rufio` CLI per the coordination protocol — no model or agent SDK ever links into Rufio core or the TUI binary; whichever harness drives the substrate is a swappable deployment choice. Substrate invariants are enforced CLI-side (a misbehaving harness must not poison the commons); the wire format + CLI contract is a versioned *public protocol*.
 
 - **Full CLI-parity console** - anything doable from the `rufio` CLI doable
   from the TUI: slash commands, configuration, substrate ops. The TUI
@@ -118,48 +109,45 @@ future of that surface.)*
   *client* - the assistant lives on the substrate, not in the TUI binary.
   Demonstrate ≥2 distinct harnesses coordinating to prove neutrality and
   guard against gravitational lock-in.
-- **Privileged / trusted operator harness + governance layer** - a trusted
+- **Privileged / trusted operator harness + governance layer** — a trusted
   operator that uses the CLI in an *administrative* way (holds keys the
   substrate can *verify* to administer its core rules), feeding a future
   context + governance layer for managing agents across harnesses and
-  infrastructure. Real substrate authZ (identity/keys), categorically
-  distinct from the dropped fake `§3.2` GOV UI chrome. Extends v1.5
+  infrastructure. Real substrate authZ (identity/keys). Extends v1.5
   *Authentication* and *Trust networks*.
 - **Quorum / promotion as a visible console event** - surface
   confirm → auto-promote → `learned/` as a live, legible moment
   (confidence, refutes pulling against it), not a static `X/Y` fraction.
   This is the TUI face of the v2 *Substrate self-observation* item.
 
-### Interaction tiers - how the operator works *through* the TUI (settled 2026-05-16)
+### Interaction tiers — how the operator works *through* the TUI
 
-Four distinct surfaces. **All are thin clients over the `rufio` CLI; none
-embed a model/harness** (the locked principle holds at every tier):
+Four distinct surfaces. **All are thin clients over the `rufio` CLI; none embed a model or harness** (the architectural principle holds at every tier):
 
-1. **Within-a-substrate cognition** - the operator emits substrate records
-   (`think`/`confirm`/`say`/…) from the console. *This is the chat view.
-   Near-term = the v8 **G-interact** slice (tracked in the rebuild plan,
-   not roadmap).*
-2. **Conversational admin - same chat view.** "Set up a team / configure
+1. **Within-a-substrate cognition** — the operator emits substrate records
+   (`think`/`confirm`/`say`/…) from the console. This is the chat view of
+   the TUI.
+2. **Conversational admin — same chat view.** "Set up a team / configure
    this project" by *directed-messaging an operator/admin agent* on the
    substrate (`@operator …`). The operator-assistant is a
-   substrate-resident agent (a separate harness via the CLI), not
-   embedded; its transport is exactly G-interact's `@agent` directed
-   message - it rides for free, **no new surface needed**. *Roadmap.*
-3. **Structured per-substrate admin - a future SEPARATE settings surface.**
+   substrate-resident agent (a separate harness via the CLI), not embedded;
+   its transport is the same directed-message channel used for any other
+   1:1 cognition, so no new surface is needed.
+3. **Structured per-substrate admin — a future SEPARATE settings surface.**
    Identity, project setup, agent-scaffold spawning, extension/plugin
-   management: stateful/form-like, awkward in a chat (cf. Claude Code
-   keeping chat *and* a settings/plugins surface). A distinct admin mode
-   in the TUI, still a thin CLI client. *Roadmap.*
-4. **Multi-substrate / system control-plane - a SEPARATE view/chat, one
-   tier UP.** Talking to a higher-order operator agent that provisions,
-   manages, and orchestrates *many substrates and the whole system
-   construct* (not records within one project). This is the **control
-   plane** over the per-substrate **data plane**; implies substrate
-   registry / identity / multi-tenancy that v1 (single local project)
-   lacks. Still substrate-agnostic - that higher operator is also just an
-   agent on the CLI, never embedded. Extends/aligns with v1.5
-   *Authentication* + *Trust networks*, v2 *Federation across orgs*,
-   and the *Privileged/trusted operator + governance* item above.
+   management: stateful/form-like, awkward in a chat (cf. tools that keep
+   chat *and* a settings/plugins surface). A distinct admin mode in the
+   TUI, still a thin CLI client.
+4. **Multi-substrate / system control-plane — a SEPARATE view, one tier UP.**
+   Talking to a higher-order operator agent that provisions, manages, and
+   orchestrates *many substrates and the whole system construct* (not
+   records within one project). This is the **control plane** over the
+   per-substrate **data plane**; implies substrate registry / identity /
+   multi-tenancy that v1 (single local project) does not have. Still
+   substrate-agnostic — that higher operator is also just an agent on the
+   CLI, never embedded. Aligns with v1.5 *Authentication* + *Trust
+   networks*, v2 *Federation across orgs*, and the *Privileged operator +
+   governance* item above.
 
 ---
 

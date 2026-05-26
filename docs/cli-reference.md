@@ -17,7 +17,7 @@
 
 ```bash
 # Release-style build (what to expect from a tagged binary)
-go build -ldflags="-X main.version=v1.0.6" -o ~/.local/bin/rufio ./cmd/rufio/
+go build -ldflags="-X main.version=v1.0.6.3" -o ~/.local/bin/rufio ./cmd/rufio/
 
 # Snapshot build with the current commit SHA
 go build -ldflags="-X main.version=$(git describe --tags --always --dirty)" -o ~/.local/bin/rufio ./cmd/rufio/
@@ -190,7 +190,7 @@ rufio attend --intent="customer support" --entities=customer:5821,customer:5822
 Read-dual of `attend`. Bundles the 4-5 reads every cold agent does on first contact with a topic — identity, daemon health, fleet, attention, recall, thoughts — into a single substrate-state snapshot. Pure read; no writes. Exit 0 on success (including empty sections); exit 2 on subject validation error.
 ```bash
 rufio open customer:5821                       # full bundle
-rufio open customer:5821 --topics=billing      # server-side topic filter (#180)
+rufio open customer:5821 --topics=billing      # server-side topic filter
 rufio open customer:5821 --since=1h            # tighten recency
 rufio open customer:5821 --scope=agent         # narrow to caller's private records
 rufio open customer:5821 --json                # stable-keyset JSON object
@@ -310,7 +310,7 @@ rufio listen --as=cursor --types=thought,summon
 rufio listen --as=cursor --catch-up                 # flush existing first
 rufio listen --as=cursor --from="<opaque-cursor>"   # SDK reconnect from a known point
 ```
-**Cursor contract (#155):** `--from` accepts the opaque base64 token also emitted by the MCP `poll` tool's `next_cursor`. Pass it back byte-for-byte; do NOT parse or reformat. When `--from` or `--catch-up` is set, every 50 events (or 30s, whichever first) a `{"_type":"cursor","value":"...","ts":"..."}` JSONL line is interleaved so streaming consumers can checkpoint without parsing each event. `--from` and `--catch-up` are mutually exclusive.
+**Cursor contract:** `--from` accepts the opaque base64 token also emitted by the MCP `poll` tool's `next_cursor`. Pass it back byte-for-byte; do NOT parse or reformat. When `--from` or `--catch-up` is set, every 50 events (or 30s, whichever first) a `{"_type":"cursor","value":"...","ts":"..."}` JSONL line is interleaved so streaming consumers can checkpoint without parsing each event. `--from` and `--catch-up` are mutually exclusive.
 
 ### `rufio stream [--type=...] [--scope=...] [--from=<cursor>]`
 Like `listen`, but global — all events across the substrate. For human inspection or SDK firehose.
@@ -318,14 +318,14 @@ Like `listen`, but global — all events across the substrate. For human inspect
 rufio stream --type=observation
 rufio stream --from="<opaque-cursor>"   # SDK reconnect
 ```
-**Cursor contract (#155):** identical opaque-cursor wire format to `rufio listen` and MCP `poll` — cursors are interchangeable across surfaces.
+**Cursor contract:** identical opaque-cursor wire format to `rufio listen` and MCP `poll` — cursors are interchangeable across surfaces.
 
 ---
 
 ## Inspection
 
 ### `rufio fleet [--skill=<capability>]`
-List active agents on the substrate. Filterable by declared capability (presence + discovery land properly in v1.1).
+List active agents on the substrate. Filterable by declared capability. Presence + discovery are a v1.0 baseline; richer discovery (skills indexing, fuzzy match) is on the roadmap.
 ```bash
 rufio fleet
 rufio fleet --skill=churn-analysis
@@ -380,7 +380,7 @@ rufio swarm spawn --persona=support --count=5 --rate=1/s
 ## MCP adapter
 
 ### `rufio mcp [--root <path>] [--agent <id>]`
-> **Shipped in v1.1.** `rufio mcp` is a real MCP stdio (JSON-RPC) server, not a stub. The CLI remains the canonical interface; MCP is a transport for harnesses that don't shell well.
+> **Shipped.** `rufio mcp` is a real MCP stdio (JSON-RPC) server, not a stub. The CLI remains the canonical interface; MCP is a transport for harnesses that don't shell well.
 
 Run an MCP server over stdio exposing the 19-tool agent-participation subset (cognition / verification / channels / coordination / read). One server instance = one agent identity, resolved once at start from `--agent`, then `RUFIO_AGENT_ID`, then `.rufio/identity.local.gdl`; `--root` sets the substrate root (default: walk up from CWD). Tools write records byte-identical to the CLI.
 
@@ -398,9 +398,9 @@ Full surface, identity model, the `listen` cursor contract, the `[rufio:N]` erro
 
 ---
 
-## Hosted mode (v1.0.4)
+## Hosted mode
 
-Rufio v1.0.4 ships the hosted MVP — two agents on different infrastructures can coordinate securely through a hosted Rufio daemon. The local file-native mirror stays canonical on every client. See [hosted.md](./hosted.md) for the operational guide.
+Hosted mode ships the cross-machine MVP — two agents on different infrastructures can coordinate securely through a hosted Rufio daemon. The local file-native mirror stays canonical on every client. See [hosted.md](./hosted.md) for the operational guide.
 
 ### `rufio serve --port=8443 --tls-cert=<path> --tls-key=<path>`
 Run the rufio hosted daemon (HTTPS-MCP transport). TLS is mandatory unless `--insecure --bind=127.0.0.1` is explicitly set (with a loud stderr warning for localhost dev).
@@ -466,5 +466,5 @@ These work on every command:
 
 - [primitives.md](./primitives.md) — semantic reference for the 13 cognitive commands
 - [v1-spec.md](./v1-spec.md) — full v1 specification with architecture and wire formats
-- [demo.md](./demo.md) — the 5-beat killer demo, runnable
+- [demo.md](./demo.md) — the live walkthrough, runnable
 - [glossary.md](./glossary.md) — terms of art used across these commands

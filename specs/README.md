@@ -20,10 +20,6 @@ The other five Greppable layers — [GDLS](https://github.com/greppable/spec/blo
 
 When Rufio's parser is implemented, the build can be validated against this exact commit. If Greppable ships a breaking change later, this README's commit pin is the contract — bump deliberately, not by accident.
 
-## When Greppable moves
-
-Greppable will be donated to an open standards foundation. When it does, the URLs above change. Updating this single README is the only edit required — no vendored files to re-sync, no merge conflicts to resolve.
-
 ## Why link, not vendor
 
 Considered vendoring all seven specs into this repo. Decided against it:
